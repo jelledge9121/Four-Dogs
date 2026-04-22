@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { createCustomerSessionToken } from '@/lib/customer-session';
-import { deriveEventStatus, type EventStatusInput } from '@/lib/event-status';
-import { getEventByIdFromDatabase } from '@/lib/utils';
+import { createCustomerSessionToken } from '../../../lib/customer-session';
+import { deriveEventStatus, type EventStatusInput } from '../../../lib/event-status';
+import { getEventByIdFromDatabase } from '../../../lib/utils';
 
 type CheckinRequestBody = {
   event?: (EventStatusInput & { id?: string | null }) | null;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { deriveEventStatus, type EventStatusInput } from '@/lib/event-status';
-import { getEventByIdFromDatabase, getEventsFromDatabase } from '@/lib/utils';
+import { deriveEventStatus, type EventStatusInput } from '../../../lib/event-status';
+import { getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
 
 export type EventApiRow = EventStatusInput & {
   id: string;
@@ -17,6 +17,7 @@ export function applyDerivedLifecycleStatus<T extends EventApiRow>(
     ...event,
     status: deriveEventStatus(
       {
+        status: event.status,
         starts_at: event.starts_at,
         ends_at: event.ends_at,
         event_date: event.event_date,
@@ -34,6 +35,7 @@ function withDerivedLifecycleStatus<T extends EventApiRow>(
     ...event,
     status: deriveEventStatus(
       {
+        status: event.status,
         starts_at: event.starts_at,
         ends_at: event.ends_at,
         event_date: event.event_date,

@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import {
   getCustomerSessionTokenFromRequest,
   verifyCustomerSessionToken,
-} from '@/lib/customer-session';
-import { supabaseSelect } from '@/lib/utils';
+} from '../../../lib/customer-session';
+import { supabaseSelect } from '../../../lib/utils';
 
 type CustomerRewardRow = {
   id: string;
