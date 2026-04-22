@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { deriveEventStatus, type EventStatusInput } from '@/lib/event-status';
-import { getEventByIdFromDatabase, getEventsFromDatabase } from '@/lib/utils';
+import { deriveEventStatus, type EventStatusInput } from '../../../lib/event-status';
+import { getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
 
 export type EventApiRow = EventStatusInput & {
   id: string;

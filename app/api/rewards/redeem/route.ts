@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import {
   getCustomerSessionTokenFromRequest,
   verifyCustomerSessionToken,
-} from '@/lib/customer-session';
-import { SupabaseRequestError, supabaseRpc } from '@/lib/utils';
+} from '../../../../lib/customer-session';
+import { SupabaseRequestError, supabaseRpc } from '../../../../lib/utils';
 
 type RedeemRequestBody = {
   reward_id?: string | null;
