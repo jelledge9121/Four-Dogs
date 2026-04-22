@@ -17,6 +17,7 @@ export function applyDerivedLifecycleStatus<T extends EventApiRow>(
     ...event,
     status: deriveEventStatus(
       {
+        status: event.status,
         starts_at: event.starts_at,
         ends_at: event.ends_at,
         event_date: event.event_date,
@@ -34,6 +35,7 @@ function withDerivedLifecycleStatus<T extends EventApiRow>(
     ...event,
     status: deriveEventStatus(
       {
+        status: event.status,
         starts_at: event.starts_at,
         ends_at: event.ends_at,
         event_date: event.event_date,
