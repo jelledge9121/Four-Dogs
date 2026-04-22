@@ -15,7 +15,14 @@ export function applyDerivedLifecycleStatus<T extends EventApiRow>(
 ): Array<T & { status: ReturnType<typeof deriveEventStatus> }> {
   return events.map((event) => ({
     ...event,
-    status: deriveEventStatus(event, now),
+    status: deriveEventStatus(
+      {
+        starts_at: event.starts_at,
+        ends_at: event.ends_at,
+        event_date: event.event_date,
+      },
+      now,
+    ),
   }));
 }
 
