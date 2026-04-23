@@ -4,15 +4,19 @@ import {
   getCustomerSessionTokenFromRequest,
   verifyCustomerSessionToken,
 } from '../../../lib/customer-session';
-import { supabaseSelect } from '../../../lib/utils';
+import { buildRewardSnapshot } from '../../../lib/rewards';
+import { supabaseRpc, supabaseSelect } from '../../../lib/utils';
 
-type CustomerRewardRow = {
+type RewardSummary = {
+  total_points: number;
+  total_visits: number;
+};
+
+type PendingRedemption = {
   id: string;
-  customer_id: string;
-  event_id: string;
-  reward_id?: string | null;
-  points_balance?: number | null;
-  updated_at?: string | null;
+  reward_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
 };
 
 export async function GET(request: Request) {
@@ -26,13 +30,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid or expired customer session token.' }, { status: 401 });
   }
 
-  const params = new URLSearchParams({
-    select: 'id,customer_id,event_id,reward_id,points_balance,updated_at',
-    customer_id: `eq.${session.customer_id}`,
-    event_id: `eq.${session.event_id}`,
-    order: 'updated_at.desc',
+  const summary = await supabaseRpc<RewardSummary>('customer_rewards_summary', {
+    p_customer_id: session.customer_id,
   });
 
-  const rewards = await supabaseSelect<CustomerRewardRow>('customer_rewards', params);
-  return NextResponse.json({ rewards });
+  const pending = await supabaseSelect<PendingRedemption>(
+    'reward_redemptions',
+    new URLSearchParams({
+      select: 'id,reward_id,status,created_at',
+      customer_id: `eq.${session.customer_id}`,
+      status: 'eq.pending',
+      order: 'created_at.desc',
+    }),
+  );
+
+  const rewardSnapshot = buildRewardSnapshot(summary.total_points ?? 0);
+
+  return NextResponse.json({
+    total_points: summary.total_points ?? 0,
+    total_visits: summary.total_visits ?? 0,
+    pending_redemptions: pending,
+    ...rewardSnapshot,
+  });
 }

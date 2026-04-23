@@ -111,6 +111,32 @@ export async function supabaseRpc<T>(fnName: string, payload: Record<string, unk
   return (await response.json()) as T;
 }
 
+
+
+export async function supabaseUpdate<T extends Record<string, unknown>>(
+  table: string,
+  payload: T,
+  filters: URLSearchParams,
+): Promise<number> {
+  const { url } = getSupabaseConfig();
+  const response = await fetch(`${url}/rest/v1/${table}?${filters.toString()}`, {
+    method: 'PATCH',
+    headers: {
+      ...buildSupabaseHeaders('return=representation'),
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new SupabaseRequestError(`Supabase update failed (${table}).`, response.status, details);
+  }
+
+  const body = (await response.json()) as unknown[];
+  return Array.isArray(body) ? body.length : 0;
+}
 export async function getEventByIdFromDatabase(eventId: string): Promise<EventRecord | null> {
   const params = new URLSearchParams({
     select: 'id,title,status,event_date,starts_at,ends_at,venue_id',
