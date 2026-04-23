@@ -9,7 +9,10 @@ body {
 .fd-checkin-page {
   min-height: 100vh;
   padding: 1.25rem 1rem 2rem;
-  background: radial-gradient(circle at top, #1f1640 0%, #100d22 48%, #08070f 100%);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(69, 175, 208, 0.2), transparent 32%),
+    radial-gradient(circle at 88% 0%, rgba(72, 183, 131, 0.18), transparent 33%),
+    radial-gradient(circle at top, #1b2242 0%, #0f1330 48%, #090c1b 100%);
 }
 .fd-checkin-shell {
   width: 100%;
@@ -18,54 +21,158 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: .8rem;
 }
-.fd-checkin-header { text-align: center; }
-.fd-checkin-header p { margin: 0; color: #d5cbfb; }
-.fd-checkin-header h1 {
-  margin: .45rem 0 0;
-  letter-spacing: .08em;
+.fd-checkin-brand-header {
+  width: 100%;
+  text-align: center;
+  display: grid;
+  gap: .4rem;
+  justify-items: center;
+}
+.fd-checkin-logo-wrap {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+.fd-checkin-tagline {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: .78rem;
+  letter-spacing: .14em;
+  color: #8fead0;
+  font-weight: 700;
+}
+.fd-checkin-brand-header h1 {
+  margin: 0;
+  letter-spacing: .05em;
   text-transform: uppercase;
   font-weight: 900;
-  font-size: clamp(1.9rem, 8vw, 2.6rem);
+  font-size: clamp(1.85rem, 8vw, 2.4rem);
+  color: #eff6ff;
 }
 .fd-checkin-card {
   width: 100%;
-  border: 1px solid rgba(194, 163, 255, 0.34);
-  border-radius: 16px;
-  background: linear-gradient(160deg, rgba(28, 19, 56, 0.95), rgba(13, 10, 24, 0.97));
-  padding: 1rem;
-  box-shadow: 0 16px 32px rgba(4, 4, 12, 0.45);
+  border: 1px solid rgba(107, 228, 236, 0.32);
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(15, 34, 64, 0.94), rgba(10, 19, 37, 0.97));
+  padding: .95rem;
+  box-shadow: 0 18px 36px rgba(4, 7, 16, 0.5);
 }
-.fd-checkin-form, .fd-checkin-success { display: grid; gap: .85rem; }
+.fd-checkin-form, .fd-checkin-success { display: grid; gap: .78rem; }
+.fd-checkin-event-block {
+  border: 1px solid rgba(117, 229, 202, 0.28);
+  border-radius: 14px;
+  background: rgba(6, 27, 37, .42);
+  padding: .75rem;
+}
+.fd-checkin-event-label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .72rem;
+  color: #9eeed9;
+  font-weight: 700;
+}
+.fd-checkin-event-block h2 {
+  margin: .28rem 0 0;
+  font-size: 1.4rem;
+  line-height: 1.2;
+  color: #f2f9ff;
+}
+.fd-checkin-event-venue {
+  margin: .35rem 0 0;
+  color: #a9e7ff;
+  font-weight: 600;
+}
+.fd-checkin-event-time {
+  margin: .28rem 0 0;
+  color: #d0e2ff;
+  font-size: .95rem;
+}
+.fd-checkin-event-meta {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: .28rem;
+}
+.fd-checkin-event-meta .fd-checkin-event-time {
+  margin: 0;
+}
+.fd-event-status-badge {
+  border-radius: 999px;
+  font-size: .7rem;
+  letter-spacing: .1em;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: .32rem .58rem;
+  border: 1px solid transparent;
+}
+.fd-event-status-badge.is-live {
+  color: #d8ffe7;
+  background: rgba(38, 181, 100, 0.25);
+  border-color: rgba(77, 236, 157, 0.48);
+}
+.fd-event-status-badge.is-upcoming {
+  color: #daf0ff;
+  background: rgba(51, 141, 238, 0.26);
+  border-color: rgba(111, 196, 255, 0.5);
+}
 .fd-form-group {
   display: grid;
   gap: .45rem;
 }
 .fd-checkin-form label {
   display: block;
-  font-size: .78rem;
+  font-size: .76rem;
   text-transform: uppercase;
   letter-spacing: .08em;
-  color: #ded5ff;
+  color: #d8f2ff;
+  font-weight: 700;
 }
 .fd-checkin-input {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(194, 163, 255, 0.35);
-  background: rgba(2, 2, 8, 0.35);
-  color: #f5f3ff;
-  padding: .75rem .85rem;
+  border: 1px solid rgba(106, 218, 241, 0.4);
+  background: rgba(2, 13, 25, 0.62);
+  color: #f5fbff;
+  padding: .92rem .9rem;
+  min-height: 3.15rem;
   outline: none;
   transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
 }
 .fd-checkin-input::placeholder {
-  color: rgba(225, 215, 255, 0.56);
+  color: rgba(193, 225, 243, 0.66);
 }
 .fd-checkin-input:focus {
-  border-color: rgba(216, 196, 255, 0.82);
-  background: rgba(4, 4, 12, 0.52);
-  box-shadow: 0 0 0 3px rgba(163, 129, 255, 0.26);
+  border-color: rgba(127, 234, 213, 0.88);
+  background: rgba(4, 17, 31, 0.8);
+  box-shadow: 0 0 0 3px rgba(91, 217, 240, 0.24);
+}
+.fd-field-helper {
+  margin: 0;
+  font-size: .82rem;
+  color: #bad6ef;
+}
+.fd-trust-copy {
+  margin: -.1rem 0 0;
+  text-align: center;
+  color: #b4d8e8;
+  font-size: .8rem;
+}
+.fd-rewards-copy {
+  border: 1px dashed rgba(121, 234, 191, 0.42);
+  border-radius: 12px;
+  background: rgba(17, 70, 49, 0.2);
+  padding: .7rem;
+  display: grid;
+  gap: .26rem;
+}
+.fd-rewards-copy p {
+  margin: 0;
+  color: #d7f8e8;
+  font-size: .86rem;
 }
 .fd-checkin-error {
   margin: 0;
@@ -108,8 +215,8 @@ body {
 .fd-success-head h2 {
   margin: .25rem 0 0;
   text-transform: uppercase;
-  font-size: 2rem;
-  letter-spacing: .08em;
+  font-size: 1.8rem;
+  letter-spacing: .04em;
 }
 .fd-success-stats {
   display: grid;
@@ -150,15 +257,15 @@ body {
 .fd-logo {
   width: 100%;
   max-width: 14rem;
-  border: 1px solid rgba(90, 225, 255, .35);
+  border: 1px solid rgba(95, 226, 241, .45);
   border-radius: 16px;
   padding: .75rem;
   text-align: center;
-  background: rgba(7, 46, 66, 0.36);
+  background: rgba(8, 49, 69, 0.48);
+  box-shadow: 0 10px 30px rgba(36, 176, 215, 0.2);
 }
-.fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #ebf8ff; }
 .fd-logo-sub { margin: .2rem 0 0; text-transform: uppercase; font-size: .78rem; letter-spacing: .16em; color: #b5edff; }
-
 .fd-host-page { min-height: 100vh; background: #08070f; color: #f5f3ff; padding: 1rem; }
 .fd-host-wrap { width: 100%; max-width: 70rem; margin: 0 auto; display: grid; gap: .9rem; }
 .fd-panel { border: 1px solid rgba(194,163,255,.25); border-radius: 14px; background: rgba(22,16,43,.55); padding: .85rem; }
@@ -182,18 +289,18 @@ body {
   justify-content: center;
   align-items: center;
   border-radius: 12px;
-  border: 1px solid rgba(190, 160, 255, 0.55);
-  background: rgba(134, 95, 255, .22);
-  color: #f5f2ff;
-  font-weight: 700;
+  border: 1px solid rgba(86, 239, 208, 0.55);
+  background: linear-gradient(120deg, rgba(33, 128, 243, 0.9), rgba(40, 190, 142, 0.9));
+  color: #f5fcff;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .06em;
-  padding: .75rem .9rem;
+  padding: .82rem .9rem;
   width: 100%;
-  transition: background-color .2s ease, border-color .2s ease, opacity .2s ease;
+  transition: filter .2s ease, border-color .2s ease, opacity .2s ease;
 }
 .fd-primary-button:hover:not(:disabled),
-.fd-checkin-button:hover:not(:disabled) { background: rgba(156, 121, 255, .32); border-color: rgba(210, 189, 255, .66); }
+.fd-checkin-button:hover:not(:disabled) { filter: brightness(1.08); border-color: rgba(165, 255, 232, .7); }
 .fd-primary-button:focus-visible,
 .fd-checkin-button:focus-visible { outline: 2px solid rgba(183, 155, 255, .75); outline-offset: 2px; }
 .fd-primary-button:disabled,
