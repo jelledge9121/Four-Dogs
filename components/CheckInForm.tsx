@@ -5,9 +5,14 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { RewardDefinition } from '../lib/rewards';
 
 type EventRow = {
-  id?: string;
+  id: string;
   title?: string | null;
-  status?: string | null;
+  event_date?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  status?: 'live' | 'upcoming' | 'closed' | string | null;
+  venue_id?: string | null;
+  venue_name?: string | null;
 };
 
 type EventsResponse = {
@@ -31,23 +36,43 @@ type CheckinSuccess = {
 };
 
 function selectDefaultEvent(events: EventRow[]): string {
-  const liveEvent = events.find((event) => event.status === 'live' && event.id);
+  const liveEvent = events.find((event) => event.status === 'live');
   if (liveEvent?.id) return liveEvent.id;
 
   const firstEvent = events.find((event) => event.id);
   return firstEvent?.id ?? '';
 }
 
+function formatEventSchedule(event: EventRow): string {
+  const eventDateText = event.event_date
+    ? new Date(`${event.event_date}T00:00:00`).toLocaleDateString([], { month: 'long', day: 'numeric' })
+    : '';
+  const startTimeText = event.starts_at
+    ? new Date(event.starts_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '';
+  const endTimeText = event.ends_at
+    ? new Date(event.ends_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '';
+
+  if (eventDateText && startTimeText && endTimeText) return `${eventDateText} · ${startTimeText} – ${endTimeText}`;
+  if (eventDateText && startTimeText) return `${eventDateText} · Starts ${startTimeText}`;
+  if (eventDateText) return eventDateText;
+  if (startTimeText && endTimeText) return `${startTimeText} – ${endTimeText}`;
+  if (startTimeText) return `Starts ${startTimeText}`;
+  return 'Schedule will be announced at the venue.';
+}
+
 export default function CheckInForm() {
   const [teamName, setTeamName] = useState('');
-  const [playerName, setPlayerName] = useState('');
+  const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [events, setEvents] = useState<EventRow[]>([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [eventsLoadError, setEventsLoadError] = useState<string | null>(null);
 
   const [status, setStatus] = useState<FormStatus>('idle');
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [successPayload, setSuccessPayload] = useState<CheckinSuccess | null>(null);
 
   useEffect(() => {
@@ -59,11 +84,15 @@ export default function CheckInForm() {
         if (!response.ok) throw new Error();
 
         const payload = (await response.json()) as EventsResponse;
-        const eventId = selectDefaultEvent(payload.events ?? []);
+        const loadedEvents = payload.events ?? [];
+        const eventId = selectDefaultEvent(loadedEvents);
+
         if (!isMounted) return;
 
+        setEvents(loadedEvents);
+
         if (!eventId) {
-          setEventsLoadError('No active event available for check-in right now.');
+          setEventsLoadError('No events are available for check-in right now.');
           return;
         }
 
@@ -82,15 +111,19 @@ export default function CheckInForm() {
     };
   }, []);
 
+  const selectedEvent = useMemo(
+    () => events.find((event) => event.id === selectedEventId) ?? null,
+    [events, selectedEventId],
+  );
+
   const canSubmit = useMemo(
     () =>
       status !== 'loading' &&
-      teamName.trim().length > 0 &&
-      playerName.trim().length > 0 &&
+      participantName.trim().length > 0 &&
       phone.trim().length > 0 &&
       selectedEventId.length > 0 &&
       !eventsLoadError,
-    [status, teamName, playerName, phone, selectedEventId, eventsLoadError],
+    [status, participantName, phone, selectedEventId, eventsLoadError],
   );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -108,7 +141,7 @@ export default function CheckInForm() {
         body: JSON.stringify({
           event_id: selectedEventId,
           phone,
-          name: playerName.trim(),
+          name: participantName.trim(),
           email: email.trim() || null,
           team_name: teamName.trim(),
         }),
@@ -130,13 +163,13 @@ export default function CheckInForm() {
     return (
       <div className="fd-checkin-success">
         <div className="fd-success-head">
-          <p>Check-In Complete</p>
-          <h2>You&apos;re In</h2>
+          <p>Check-In Confirmed</p>
+          <h2>You&apos;re In 🎉</h2>
         </div>
 
         <div className="fd-success-stats">
           <div className="fd-success-stat">
-            <p>Earned</p>
+            <p>+Points Earned</p>
             <strong>+{successPayload.points_earned}</strong>
           </div>
           <div className="fd-success-stat">
@@ -150,15 +183,13 @@ export default function CheckInForm() {
         </div>
 
         {successPayload.bonuses_earned.length > 0 ? (
-          <p className="fd-checkin-info">
-            Bonus: {successPayload.bonuses_earned.join(', ')}
-          </p>
+          <p className="fd-checkin-info">Bonuses earned: {successPayload.bonuses_earned.join(', ')}</p>
         ) : null}
 
         {successPayload.next_reward ? (
           <p className="fd-checkin-info">
-            Next reward: {successPayload.next_reward.reward.title} at {successPayload.next_reward.target_points} points
-            ({successPayload.next_reward.points_to_unlock} to go)
+            You&apos;re {successPayload.next_reward.points_to_unlock} points away from your next reward
+            ({successPayload.next_reward.reward.title}).
           </p>
         ) : null}
 
@@ -167,20 +198,20 @@ export default function CheckInForm() {
             <p className="fd-success-label">Available Rewards</p>
             <ul className="fd-success-list">
               {successPayload.available_rewards.map((reward) => (
-                <li key={reward.id}>
-                  {reward.title}
-                </li>
+                <li key={reward.id}>{reward.title}</li>
               ))}
             </ul>
           </div>
-        ) : null}
+        ) : (
+          <p className="fd-checkin-info">No rewards are unlocked yet—keep checking in to earn more points.</p>
+        )}
 
         <button
           type="button"
           onClick={() => {
             setStatus('idle');
             setTeamName('');
-            setPlayerName('');
+            setParticipantName('');
             setPhone('');
             setEmail('');
             setErrorMessage('');
@@ -196,8 +227,45 @@ export default function CheckInForm() {
 
   return (
     <form onSubmit={handleSubmit} className="fd-checkin-form" noValidate>
+      <section className="fd-checkin-event-block" aria-label="Selected event">
+        <p className="fd-checkin-event-label">You are checking into</p>
+        {selectedEvent ? (
+          <>
+            <h2>{selectedEvent.title ?? 'Untitled Event'}</h2>
+            <p className="fd-checkin-event-venue">{selectedEvent.venue_name ?? 'Venue to be announced'}</p>
+            <div className="fd-checkin-event-meta">
+              <p className="fd-checkin-event-time">{formatEventSchedule(selectedEvent)}</p>
+              <span className={`fd-event-status-badge ${selectedEvent.status === 'live' ? 'is-live' : 'is-upcoming'}`}>
+                {selectedEvent.status === 'live' ? 'LIVE' : 'UPCOMING'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <p className="fd-checkin-warning">No events are available for check-in right now.</p>
+        )}
+      </section>
+
+      {events.length > 1 ? (
+        <div className="fd-form-group">
+          <label htmlFor="event-id">Choose Event</label>
+          <select
+            id="event-id"
+            value={selectedEventId}
+            onChange={(event) => setSelectedEventId(event.target.value)}
+            className="fd-checkin-input"
+            required
+          >
+            {events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.title ?? 'Untitled Event'} · {event.venue_name ?? 'Venue TBD'}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       <div className="fd-form-group">
-        <label htmlFor="team-name">Team Name</label>
+        <label htmlFor="team-name">Team Name (optional)</label>
         <input
           id="team-name"
           type="text"
@@ -205,17 +273,16 @@ export default function CheckInForm() {
           onChange={(event) => setTeamName(event.target.value)}
           placeholder="The Late Arrivals"
           className="fd-checkin-input"
-          required
         />
       </div>
 
       <div className="fd-form-group">
-        <label htmlFor="player-name">Player Name</label>
+        <label htmlFor="participant-name">Your Name</label>
         <input
-          id="player-name"
+          id="participant-name"
           type="text"
-          value={playerName}
-          onChange={(event) => setPlayerName(event.target.value)}
+          value={participantName}
+          onChange={(event) => setParticipantName(event.target.value)}
           placeholder="Your Name"
           className="fd-checkin-input"
           required
@@ -223,7 +290,7 @@ export default function CheckInForm() {
       </div>
 
       <div className="fd-form-group">
-        <label htmlFor="phone">Phone Number</label>
+        <label htmlFor="phone">Your Phone Number</label>
         <input
           id="phone"
           type="tel"
@@ -233,6 +300,7 @@ export default function CheckInForm() {
           className="fd-checkin-input"
           required
         />
+        <p className="fd-field-helper">Use the same number each time so your points stay with you.</p>
       </div>
 
       <div className="fd-form-group">
@@ -247,16 +315,20 @@ export default function CheckInForm() {
         />
       </div>
 
+      <section className="fd-rewards-copy" aria-label="Reward details">
+        <p>Earn 1 point every check-in</p>
+        <p>First visit bonus: +2 points</p>
+        <p>Redeem points for bonus trivia points, bingo cards, appetizers, drinks, and Four Dogs gear</p>
+      </section>
+
       {eventsLoadError ? <p className="fd-checkin-warning">{eventsLoadError}</p> : null}
       {status === 'error' ? <p className="fd-checkin-error">{errorMessage}</p> : null}
 
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="fd-checkin-button"
-      >
-        {status === 'loading' ? 'Checking In…' : 'Check In'}
+      <button type="submit" disabled={!canSubmit} className="fd-checkin-button">
+        {status === 'loading' ? 'Checking In…' : 'Check In & Earn Points'}
       </button>
+
+      <p className="fd-trust-copy">No spam. Just rewards.</p>
     </form>
   );
 }

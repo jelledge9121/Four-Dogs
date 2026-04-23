@@ -11,12 +11,28 @@ export type EventRecord = HostEvent & {
   ends_at?: string | null;
   venue_id?: string | null;
   status?: string | null;
+  venue_name?: string | null;
 };
 
 type SupabaseHeaders = {
   apikey: string;
   Authorization: string;
   Prefer?: string;
+};
+
+type SupabaseEventRow = {
+  id: string;
+  title?: string | null;
+  event_date?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  status?: string | null;
+  venue_id?: string | null;
+};
+
+type SupabaseVenueRow = {
+  id: string;
+  name?: string | null;
 };
 
 export class SupabaseRequestError extends Error {
@@ -111,8 +127,6 @@ export async function supabaseRpc<T>(fnName: string, payload: Record<string, unk
   return (await response.json()) as T;
 }
 
-
-
 export async function supabaseUpdate<T extends Record<string, unknown>>(
   table: string,
   payload: T,
@@ -137,6 +151,45 @@ export async function supabaseUpdate<T extends Record<string, unknown>>(
   const body = (await response.json()) as unknown[];
   return Array.isArray(body) ? body.length : 0;
 }
+
+function mapEventRows(rows: SupabaseEventRow[]): EventRecord[] {
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title ?? null,
+    event_date: row.event_date ?? null,
+    starts_at: row.starts_at ?? null,
+    ends_at: row.ends_at ?? null,
+    status: row.status ?? null,
+    venue_id: row.venue_id ?? null,
+    venue_name: null,
+  }));
+}
+
+async function mergeVenueNames(events: EventRecord[]): Promise<EventRecord[]> {
+  const venueIds = Array.from(
+    new Set(
+      events
+        .map((event) => event.venue_id)
+        .filter((venueId): venueId is string => Boolean(venueId)),
+    ),
+  );
+
+  if (venueIds.length === 0) return events;
+
+  const venueParams = new URLSearchParams({
+    select: 'id,name',
+    id: `in.(${venueIds.join(',')})`,
+  });
+
+  const venues = await supabaseSelect<SupabaseVenueRow>('venues', venueParams);
+  const venueNameById = new Map(venues.map((venue) => [venue.id, venue.name ?? null]));
+
+  return events.map((event) => ({
+    ...event,
+    venue_name: event.venue_id ? (venueNameById.get(event.venue_id) ?? null) : null,
+  }));
+}
+
 export async function getEventByIdFromDatabase(eventId: string): Promise<EventRecord | null> {
   const params = new URLSearchParams({
     select: 'id,title,status,event_date,starts_at,ends_at,venue_id',
@@ -144,17 +197,20 @@ export async function getEventByIdFromDatabase(eventId: string): Promise<EventRe
     limit: '1',
   });
 
-  const events = await supabaseSelect<EventRecord>('events', params);
-  return events[0] ?? null;
+  const events = mapEventRows(await supabaseSelect<SupabaseEventRow>('events', params));
+  const eventsWithVenues = await mergeVenueNames(events);
+  return eventsWithVenues[0] ?? null;
 }
 
 export async function getEventsFromDatabase(): Promise<EventRecord[]> {
   const params = new URLSearchParams({
-    select: 'id,title,status,event_date,starts_at,ends_at,venue_id',
-    order: 'event_date.asc',
+    select: 'id,title,event_date,starts_at,ends_at,status,venue_id',
+    status: 'in.(live,upcoming)',
+    order: 'starts_at.asc.nullslast,event_date.asc',
   });
 
-  return supabaseSelect<EventRecord>('events', params);
+  const events = mapEventRows(await supabaseSelect<SupabaseEventRow>('events', params));
+  return mergeVenueNames(events);
 }
 
 export function getHostActiveEvent<T extends HostEvent>(

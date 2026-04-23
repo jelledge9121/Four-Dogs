@@ -1,64 +1,53 @@
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 
-import { deriveEventStatus, type EventStatusInput } from '../../../lib/event-status';
 import { getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
 
-export type EventApiRow = EventStatusInput & {
-  id: string;
-  title?: string | null;
-  venue_id?: string | null;
-};
-
-export function applyDerivedLifecycleStatus<T extends EventApiRow>(
+function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
   events: T[],
-  now: Date = new Date(),
-): Array<T & { status: ReturnType<typeof deriveEventStatus> }> {
-  return events.map((event) => ({
-    ...event,
-    status: deriveEventStatus(
-      {
-        status: event.status,
-        starts_at: event.starts_at,
-        ends_at: event.ends_at,
-        event_date: event.event_date,
-      },
-      now,
-    ),
-  }));
-}
+): T[] {
+  return [...events].sort((a, b) => {
+    const aRank = a.status === 'live' ? 0 : 1;
+    const bRank = b.status === 'live' ? 0 : 1;
 
-function withDerivedLifecycleStatus<T extends EventApiRow>(
-  event: T,
-  now: Date = new Date(),
-): T & { status: ReturnType<typeof deriveEventStatus> } {
-  return {
-    ...event,
-    status: deriveEventStatus(
-      {
-        status: event.status,
-        starts_at: event.starts_at,
-        ends_at: event.ends_at,
-        event_date: event.event_date,
-      },
-      now,
-    ),
-  };
+    if (aRank !== bRank) return aRank - bRank;
+
+    const aTime = a.starts_at ?? (a.event_date ? `${a.event_date}T00:00:00` : '');
+    const bTime = b.starts_at ?? (b.event_date ? `${b.event_date}T00:00:00` : '');
+
+    if (!aTime && !bTime) return 0;
+    if (!aTime) return 1;
+    if (!bTime) return -1;
+
+    return new Date(aTime).getTime() - new Date(bTime).getTime();
+  });
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const selectedEventId = searchParams.get('event_id')?.trim();
 
-  if (selectedEventId) {
-    const event = await getEventByIdFromDatabase(selectedEventId);
+  try {
+    if (selectedEventId) {
+      const event = await getEventByIdFromDatabase(selectedEventId);
 
-    if (!event) {
-      return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+      if (!event) {
+        return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+      }
+
+      return NextResponse.json({ event });
     }
 
-    return NextResponse.json({ event: withDerivedLifecycleStatus(event) });
-  }
+    const events = await getEventsFromDatabase();
+    const sortedEvents = sortEventsByLiveThenStart(events);
+    return NextResponse.json({ events: sortedEvents });
+  } catch (error) {
+    console.error('[api/events] Failed to load events', {
+      selectedEventId: selectedEventId ?? null,
+      error: error instanceof Error ? error.message : error,
+    });
 
-  const events = await getEventsFromDatabase();
-  return NextResponse.json({ events: applyDerivedLifecycleStatus(events) });
+    return NextResponse.json({ events: [], error: 'Unable to load events.' }, { status: 500 });
+  }
 }
