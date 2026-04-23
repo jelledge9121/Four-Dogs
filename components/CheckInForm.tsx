@@ -147,9 +147,17 @@ export default function CheckInForm() {
         }),
       });
 
-      const payload = (await response.json()) as CheckinSuccess & { error?: string };
+      const raw = await response.text();
+      let payload: CheckinSuccess & { error?: string } = {} as CheckinSuccess & { error?: string };
+      try {
+        payload = raw ? (JSON.parse(raw) as CheckinSuccess & { error?: string }) : ({} as CheckinSuccess & { error?: string });
+      } catch {
+        payload = {} as CheckinSuccess & { error?: string };
+      }
 
-      if (!response.ok) throw new Error(payload.error ?? 'Check-in failed. Please try again.');
+      if (!response.ok) {
+        throw new Error((payload as any).error || `Check-in failed (${response.status})`);
+      }
 
       setSuccessPayload(payload);
       setStatus('success');
