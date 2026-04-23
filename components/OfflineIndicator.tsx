@@ -18,5 +18,5 @@ export default function OfflineIndicator() {
 
   if (online) return null;
 
-  return <div className="fd-note-warn">Offline mode detected.</div>;
+  return <div className="rounded-xl border border-amber-300/50 bg-amber-500/15 px-3 py-2 text-sm">Offline mode detected.</div>;
 }
