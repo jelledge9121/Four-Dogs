@@ -46,10 +46,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('[api/events] Failed to load events', {
       selectedEventId: selectedEventId ?? null,
-      errorName: error instanceof Error ? error.name : null,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorCause: error instanceof Error && 'cause' in error ? error.cause : null,
-      rawError: error,
+      error: error instanceof Error ? error.message : error,
     });
 
     return NextResponse.json(
