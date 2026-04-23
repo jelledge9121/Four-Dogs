@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 
 import { getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
@@ -26,11 +28,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const selectedEventId = searchParams.get('event_id')?.trim();
 
-  if (selectedEventId) {
-    const event = await getEventByIdFromDatabase(selectedEventId);
+  try {
+    if (selectedEventId) {
+      const event = await getEventByIdFromDatabase(selectedEventId);
 
-    if (!event) {
-      return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+      if (!event) {
+        return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+      }
+
+      return NextResponse.json({ event });
     }
 
     return NextResponse.json({ event });
