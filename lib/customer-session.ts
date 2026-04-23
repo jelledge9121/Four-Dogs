@@ -54,7 +54,9 @@ async function verifyMessageSignature(message: string, signature: string, secret
   }
 
   const key = await importHmacKey(secret, ['verify']);
-  return crypto.subtle.verify('HMAC', key, signatureBytes, new TextEncoder().encode(message));
+  const signatureBuffer = new ArrayBuffer(signatureBytes.byteLength);
+  new Uint8Array(signatureBuffer).set(signatureBytes);
+  return crypto.subtle.verify('HMAC', key, signatureBuffer, new TextEncoder().encode(message));
 }
 
 function getSessionSecret(): string {
