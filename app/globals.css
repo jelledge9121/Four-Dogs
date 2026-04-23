@@ -1,0 +1,195 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #08070f;
+  color: #f5f3ff;
+}
+
+.fd-checkin-page {
+  min-height: 100vh;
+  padding: 1.25rem 1rem 2rem;
+  background: radial-gradient(circle at top, #1f1640 0%, #100d22 48%, #08070f 100%);
+}
+.fd-checkin-shell {
+  width: 100%;
+  max-width: 30rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.fd-checkin-header { text-align: center; }
+.fd-checkin-header p { margin: 0; color: #d5cbfb; }
+.fd-checkin-header h1 {
+  margin: .45rem 0 0;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-size: clamp(1.9rem, 8vw, 2.6rem);
+}
+.fd-checkin-card {
+  width: 100%;
+  border: 1px solid rgba(194, 163, 255, 0.34);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(28, 19, 56, 0.95), rgba(13, 10, 24, 0.97));
+  padding: 1rem;
+  box-shadow: 0 16px 32px rgba(4, 4, 12, 0.45);
+}
+.fd-checkin-form, .fd-checkin-success { display: grid; gap: .85rem; }
+.fd-checkin-form label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #ded5ff; }
+.fd-checkin-form input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(194, 163, 255, 0.35);
+  background: rgba(2, 2, 8, 0.35);
+  color: #f5f3ff;
+  padding: .75rem .85rem;
+  outline: none;
+}
+.fd-checkin-success {
+  border: 1px solid rgba(110, 238, 172, .35);
+  background: rgba(7, 56, 31, .26);
+  border-radius: 14px;
+  padding: .9rem;
+}
+.fd-success-head { text-align: center; }
+.fd-success-head p {
+  margin: 0;
+  color: #9de9c0;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.fd-success-head h2 {
+  margin: .25rem 0 0;
+  text-transform: uppercase;
+  font-size: 2rem;
+  letter-spacing: .08em;
+}
+.fd-success-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+}
+.fd-success-stat {
+  border: 1px solid rgba(110, 238, 172, .3);
+  border-radius: 10px;
+  background: rgba(0,0,0,.24);
+  padding: .45rem;
+  text-align: center;
+}
+.fd-success-stat p { margin: 0; font-size: .75rem; color: #bdf5d5; }
+.fd-success-stat strong { display: block; margin-top: .15rem; }
+.fd-success-label {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  color: #bdf5d5;
+  font-weight: 700;
+}
+.fd-success-list {
+  margin: .45rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .4rem;
+}
+.fd-success-list li {
+  border: 1px solid rgba(110, 238, 172, .27);
+  border-radius: 8px;
+  padding: .5rem .6rem;
+  background: rgba(0,0,0,.22);
+  font-size: .9rem;
+}
+.fd-logo {
+  width: 100%;
+  max-width: 14rem;
+  border: 1px solid rgba(90, 225, 255, .35);
+  border-radius: 16px;
+  padding: .75rem;
+  text-align: center;
+  background: rgba(7, 46, 66, 0.36);
+}
+.fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.fd-logo-sub { margin: .2rem 0 0; text-transform: uppercase; font-size: .78rem; letter-spacing: .16em; color: #b5edff; }
+
+.fd-host-page { min-height: 100vh; background: #08070f; color: #f5f3ff; padding: 1rem; }
+.fd-host-wrap { width: 100%; max-width: 70rem; margin: 0 auto; display: grid; gap: .9rem; }
+.fd-panel { border: 1px solid rgba(194,163,255,.25); border-radius: 14px; background: rgba(22,16,43,.55); padding: .85rem; }
+.fd-grid { display: grid; gap: .8rem; }
+@media (min-width: 860px) { .fd-grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+.fd-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .78rem;
+  color: #d8cdff;
+}
+.fd-muted { margin: 0; color: #cfc2f6; }
+.fd-note-warn { border: 1px solid rgba(255,203,111,.55); background: rgba(255,187,76,.14); border-radius: 8px; padding: .45rem .55rem; }
+.fd-note-info { border: 1px solid rgba(111,235,255,.45); background: rgba(56,196,255,.1); border-radius: 8px; padding: .45rem .55rem; }
+
+.fd-primary-button {
+  border-radius: 12px;
+  border: 1px solid rgba(190, 160, 255, 0.55);
+  background: rgba(134, 95, 255, .22);
+  color: #f5f2ff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .75rem .9rem;
+  width: 100%;
+}
+.fd-primary-button:disabled { opacity: .5; cursor: not-allowed; }
+
+.fd-host-auth-wrap { display: grid; place-items: center; }
+.fd-host-auth-form { width: 100%; max-width: 28rem; display: grid; gap: .75rem; }
+.fd-host-auth-form h1 { margin: 0; text-transform: uppercase; letter-spacing: .08em; }
+.fd-host-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(194,163,255,.4);
+  background: rgba(0,0,0,.3);
+  color: #f6f3ff;
+  padding: .7rem .8rem;
+}
+
+.fd-event-header h1 { margin: 0; font-size: 1.6rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.fd-event-header p { margin: .35rem 0 0; color: #d5cbfb; }
+
+.fd-event-status p:last-child { margin: .45rem 0 0; }
+
+.fd-qr-box {
+  margin-top: .7rem;
+  border: 1px dashed rgba(116,232,255,.5);
+  border-radius: 10px;
+  min-height: 9rem;
+  display: grid;
+  place-items: center;
+  color: #b4ecff;
+}
+
+.fd-player-search input { margin-top: .7rem; }
+
+.fd-team-title { margin: 0; font-weight: 700; }
+.fd-team-subtitle { margin: .28rem 0 0; color: #d5cbfb; font-size: .9rem; }
+.fd-team-points { margin: .5rem 0 0; color: #b4ecff; text-transform: uppercase; font-size: .76rem; letter-spacing: .06em; }
+
+.fd-pending-list { margin-top: .75rem; display: grid; gap: .7rem; }
+.fd-pending-item { background: rgba(5,5,12,.4); }
+
+.fd-action-buttons { margin-top: .65rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.fd-approve-button,
+.fd-reject-button {
+  border-radius: 8px;
+  padding: .5rem .65rem;
+  font-weight: 700;
+}
+.fd-approve-button { border: 1px solid rgba(120,240,160,.6); background: rgba(54,173,93,.22); color: #e8ffee; }
+.fd-reject-button { border: 1px solid rgba(255,140,140,.6); background: rgba(232,78,78,.22); color: #ffecec; }
+.fd-team-modal { margin-top: .6rem; }
