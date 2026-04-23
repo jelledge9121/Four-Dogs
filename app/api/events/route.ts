@@ -39,15 +39,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ event });
     }
 
-    const events = await getEventsFromDatabase();
-    const sortedEvents = sortEventsByLiveThenStart(events);
-    return NextResponse.json({ events: sortedEvents });
-  } catch (error) {
-    console.error('[api/events] Failed to load events', {
-      selectedEventId: selectedEventId ?? null,
-      error: error instanceof Error ? error.message : error,
-    });
-
-    return NextResponse.json({ events: [], error: 'Unable to load events.' }, { status: 500 });
+    return NextResponse.json({ event });
   }
+
+  const events = await getEventsFromDatabase();
+  const sortedEvents = sortEventsByLiveThenStart(events);
+  return NextResponse.json({ events: sortedEvents });
 }
