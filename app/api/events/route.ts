@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 
-import { getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
+import { getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
 
 function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
   events: T[],
@@ -29,6 +29,13 @@ export async function GET(request: Request) {
   const selectedEventId = searchParams.get('event_id')?.trim();
 
   try {
+    // Auto-sync event statuses (close expired, open started)
+    try {
+      await supabaseRpc<void>('sync_event_statuses', {});
+    } catch {
+      // Non-fatal — continue even if sync fails
+    }
+
     if (selectedEventId) {
       const event = await getEventByIdFromDatabase(selectedEventId);
 
@@ -45,7 +52,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ events: sortedEvents });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-
     console.error('[api/events] Failed to load events:', errMsg);
 
     return NextResponse.json(
