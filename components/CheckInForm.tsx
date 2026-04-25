@@ -26,6 +26,7 @@ type CheckinSuccess = {
   total_points: number;
   total_visits: number;
   bonuses_earned: string[];
+  referral_code: string | null;
   available_rewards: RewardDefinition[];
   locked_rewards: RewardDefinition[];
   next_reward: {
@@ -67,6 +68,7 @@ export default function CheckInForm() {
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [events, setEvents] = useState<EventRow[]>([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [eventsLoadError, setEventsLoadError] = useState<string | null>(null);
@@ -74,6 +76,13 @@ export default function CheckInForm() {
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [successPayload, setSuccessPayload] = useState<CheckinSuccess | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) setReferralCode(ref.toUpperCase());
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -144,6 +153,7 @@ export default function CheckInForm() {
           name: participantName.trim(),
           email: email.trim() || null,
           team_name: teamName.trim(),
+          referral_code: referralCode.trim() || null,
         }),
       });
 
@@ -164,6 +174,21 @@ export default function CheckInForm() {
     } catch (error) {
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Check-in failed. Please try again.');
+    }
+  }
+
+  function buildReferralLink(code: string): string {
+    const base = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${base}/checkin?ref=${code}`;
+  }
+
+  async function handleCopyReferral(code: string) {
+    try {
+      await navigator.clipboard.writeText(buildReferralLink(code));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // fallback: leave as-is
     }
   }
 
@@ -191,13 +216,26 @@ export default function CheckInForm() {
         </div>
 
         {successPayload.bonuses_earned.length > 0 ? (
-          <p className="fd-checkin-info">Bonuses earned: {successPayload.bonuses_earned.join(', ')}</p>
+          <p className="fd-checkin-info">
+            🎁 Bonuses:{' '}
+            {successPayload.bonuses_earned
+              .map((bonus) =>
+                bonus === 'first_visit_bonus'
+                  ? 'First Visit +2'
+                  : bonus === 'referral_bonus'
+                    ? 'Referral +2'
+                    : bonus.startsWith('milestone')
+                      ? 'Milestone +2'
+                      : bonus,
+              )
+              .join(', ')}
+          </p>
         ) : null}
 
         {successPayload.next_reward ? (
           <p className="fd-checkin-info">
-            You&apos;re {successPayload.next_reward.points_to_unlock} points away from your next reward
-            ({successPayload.next_reward.reward.title}).
+            You&apos;re {successPayload.next_reward.points_to_unlock} points away from{' '}
+            {successPayload.next_reward.reward.title}.
           </p>
         ) : null}
 
@@ -211,8 +249,50 @@ export default function CheckInForm() {
             </ul>
           </div>
         ) : (
-          <p className="fd-checkin-info">No rewards are unlocked yet—keep checking in to earn more points.</p>
+          <p className="fd-checkin-info">Keep checking in to unlock rewards!</p>
         )}
+
+        {successPayload.referral_code ? (
+          <div
+            style={{
+              marginTop: '1.25rem',
+              padding: '1rem',
+              background: 'rgba(0,200,200,0.08)',
+              border: '1px solid #00c8c8',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: '#00c8c8', fontWeight: 600 }}>
+              🐾 Share &amp; Both Earn +2 Points
+            </p>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: '#aaa' }}>
+              Share your link — when a friend checks in, you both get +2 bonus points!
+            </p>
+            <code
+              style={{
+                display: 'block',
+                fontSize: '0.75rem',
+                color: '#fff',
+                background: 'rgba(0,0,0,0.3)',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                marginBottom: '0.75rem',
+                wordBreak: 'break-all',
+              }}
+            >
+              {buildReferralLink(successPayload.referral_code)}
+            </code>
+            <button
+              type="button"
+              onClick={() => handleCopyReferral(successPayload.referral_code!)}
+              className="fd-checkin-button"
+              style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+            >
+              {copied ? '✓ Copied!' : 'Copy Referral Link'}
+            </button>
+          </div>
+        ) : null}
 
         <button
           type="button"
@@ -222,10 +302,13 @@ export default function CheckInForm() {
             setParticipantName('');
             setPhone('');
             setEmail('');
+            setReferralCode('');
             setErrorMessage('');
             setSuccessPayload(null);
+            setCopied(false);
           }}
           className="fd-checkin-button"
+          style={{ marginTop: '1rem', background: 'transparent', border: '1px solid #444', color: '#aaa' }}
         >
           Check In Another Player
         </button>
@@ -323,9 +406,22 @@ export default function CheckInForm() {
         />
       </div>
 
+      <div className="fd-form-group">
+        <label htmlFor="referral-code">Referral Code (Optional)</label>
+        <input
+          id="referral-code"
+          type="text"
+          value={referralCode}
+          onChange={(event) => setReferralCode(event.target.value.toUpperCase())}
+          placeholder="Friend's code for +2 bonus points"
+          className="fd-checkin-input"
+        />
+      </div>
+
       <section className="fd-rewards-copy" aria-label="Reward details">
         <p>Earn 1 point every check-in</p>
         <p>First visit bonus: +2 points</p>
+        <p>Refer a friend: +2 points each</p>
         <p>Redeem points for bonus trivia points, bingo cards, appetizers, drinks, and Four Dogs gear</p>
       </section>
 
