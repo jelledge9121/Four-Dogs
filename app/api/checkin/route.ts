@@ -11,6 +11,7 @@ type CheckinBody = {
   phone?: string;
   name?: string;
   email?: string;
+  referral_code?: string;
 };
 
 type CheckinRpcResult = {
@@ -22,6 +23,7 @@ type CheckinRpcResult = {
   total_points: number;
   total_visits: number;
   bonuses_earned: string[];
+  referral_code?: string | null;
 };
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
@@ -56,6 +58,7 @@ export async function POST(request: Request) {
     const phone = normalizePhone(body.phone ?? '');
     const name = body.name?.trim() ?? '';
     const email = body.email?.trim().toLowerCase() ?? '';
+    const referralCode = body.referral_code?.trim().toUpperCase() ?? '';
 
     if (!eventId) return NextResponse.json({ error: 'Missing event_id.' }, { status: 400 });
     if (!phone) return NextResponse.json({ error: 'A valid phone number is required.' }, { status: 400 });
@@ -71,6 +74,7 @@ export async function POST(request: Request) {
         p_phone_normalized: phone,
         p_name: name || null,
         p_email: email || null,
+        p_referral_code: referralCode || null,
       });
       console.log('[checkin RPC result]', result);
 
@@ -88,6 +92,7 @@ export async function POST(request: Request) {
         total_points: result.total_points ?? 0,
         total_visits: result.total_visits ?? 0,
         bonuses_earned: result.bonuses_earned ?? [],
+        referral_code: result.referral_code ?? null,
         ...rewardSnapshot,
       });
 
