@@ -1,8 +1,15 @@
+import Image from 'next/image';
+
 export default function FourDogsLogo() {
   return (
     <div className="fd-logo" aria-label="Four Dogs Entertainment">
-      <p className="fd-logo-title">Four Dogs</p>
-      <p className="fd-logo-sub">Entertainment</p>
+      <Image
+        src="/four-dogs-logo.png"
+        alt="Four Dogs Entertainment"
+        width={120}
+        height={120}
+        priority
+      />
     </div>
   );
 }
