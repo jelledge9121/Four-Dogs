@@ -44,13 +44,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ events: sortedEvents });
   } catch (error) {
-    console.error('[api/events] Failed to load events', {
-      selectedEventId: selectedEventId ?? null,
-      error: error instanceof Error ? error.message : error,
-    });
+    const errMsg = error instanceof Error ? error.message : String(error);
+
+    console.error('[api/events] Failed to load events:', errMsg);
 
     return NextResponse.json(
-      { events: [], error: 'Unable to load events.' },
+      { events: [], error: errMsg },
       { status: 500 },
     );
   }
