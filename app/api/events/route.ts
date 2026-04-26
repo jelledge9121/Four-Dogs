@@ -32,13 +32,6 @@ export async function GET(request: Request) {
   const selectedEventId = searchParams.get('event_id')?.trim();
 
   try {
-    // Auto-sync event statuses (close expired, open started)
-    try {
-      await supabaseRpc<void>('sync_event_statuses', {});
-    } catch {
-      // Non-fatal — continue even if sync fails
-    }
-
     if (selectedEventId) {
       const event = await getEventByIdFromDatabase(selectedEventId);
 
@@ -64,11 +57,31 @@ export async function GET(request: Request) {
       },
     );
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    console.error('[api/events] Failed to load events:', errMsg);
+    if (error instanceof SupabaseRequestError) {
+      return NextResponse.json(
+        {
+          events: [],
+          error: {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          },
+        },
+        { status: error.status || 500 },
+      );
+    }
 
     return NextResponse.json(
-      { events: [], error: errMsg },
+      {
+        events: [],
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          details: null,
+          hint: null,
+          code: null,
+        },
+      },
       { status: 500 },
     );
   }
