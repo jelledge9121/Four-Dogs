@@ -36,7 +36,7 @@ function shouldRetryWithoutReferral(error: unknown): boolean {
   if (!(error instanceof SupabaseRequestError)) return false;
   if (![400, 404].includes(error.status)) return false;
 
-  const details = error.details.toLowerCase();
+  const details = (error.details ?? '').toLowerCase();
   return details.includes('p_referral_code') || details.includes('function public.checkin_with_rewards');
 }
 
