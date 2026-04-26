@@ -132,8 +132,19 @@ export async function POST(request: Request) {
       response.headers.append('Set-Cookie', buildSessionCookie(sessionToken));
       return response;
     } catch (error) {
-      if (error instanceof SupabaseRequestError && error.status === 409) {
-        return NextResponse.json({ error: 'This customer is already checked in for this event.' }, { status: 409 });
+      if (error instanceof SupabaseRequestError) {
+        const details = (error.details ?? '').toLowerCase();
+        const hint = (error.hint ?? '').toLowerCase();
+        const message = (error.message ?? '').toLowerCase();
+
+        if (
+          error.status === 409 ||
+          details.includes('duplicate') ||
+          message.includes('duplicate') ||
+          hint.includes('duplicate')
+        ) {
+          return NextResponse.json({ error: 'This customer is already checked in for this event.' }, { status: 409 });
+        }
       }
 
       throw error;
