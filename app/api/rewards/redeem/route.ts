@@ -16,7 +16,6 @@ import { SupabaseRequestError, supabaseInsert, supabaseRpc, supabaseSelect } fro
 type RedeemRequestBody = {
   reward_id?: string;
   reward_catalog_id?: string;
-  customer_id?: string;
   phone?: string;
 };
 
@@ -31,56 +30,7 @@ type SessionContext = {
   eventId: string;
 };
 
-type CustomerLookup = {
-  id: string;
-};
-
-async function buildSessionContext(request: Request, body: RedeemRequestBody): Promise<SessionContext | null> {
-  if (body.customer_id) {
-    const customerId = body.customer_id.trim();
-    const rows = await supabaseSelect<{ event_id?: string | null }>(
-      'check_ins',
-      new URLSearchParams({
-        select: 'event_id',
-        customer_id: `eq.${customerId}`,
-        order: 'created_at.desc',
-        limit: '1',
-      }),
-    );
-
-    const eventId = rows[0]?.event_id?.trim();
-    if (!eventId) return null;
-
-    return { customerId, eventId };
-  }
-
-  if (body.phone) {
-    const normalized = normalizePhone(body.phone);
-    if (!normalized) return null;
-
-    const customers = await supabaseSelect<CustomerLookup>(
-      'customers',
-      new URLSearchParams({ select: 'id', phone_normalized: `eq.${normalized}`, limit: '1' }),
-    );
-    const customerId = customers[0]?.id;
-    if (!customerId) return null;
-
-    const rows = await supabaseSelect<{ event_id?: string | null }>(
-      'check_ins',
-      new URLSearchParams({
-        select: 'event_id',
-        customer_id: `eq.${customerId}`,
-        order: 'created_at.desc',
-        limit: '1',
-      }),
-    );
-
-    const eventId = rows[0]?.event_id?.trim();
-    if (!eventId) return null;
-
-    return { customerId, eventId };
-  }
-
+async function buildSessionContext(request: Request): Promise<SessionContext | null> {
   const token = getCustomerSessionTokenFromRequest(request);
   if (!token) return null;
 
@@ -104,9 +54,9 @@ export async function POST(request: Request) {
   const reward = REWARDS.find((item) => item.id === rewardId);
   if (!reward) return NextResponse.json({ ok: false, error: 'Unknown reward.' }, { status: 404 });
 
-  const context = await buildSessionContext(request, body);
+  const context = await buildSessionContext(request);
   if (!context) {
-    return NextResponse.json({ ok: false, error: 'Could not resolve customer/event context for redemption.' }, { status: 401 });
+    return NextResponse.json({ ok: false, error: 'Missing or invalid customer session token.' }, { status: 401 });
   }
 
   const existingPending = await supabaseSelect<PendingRedemption>(
