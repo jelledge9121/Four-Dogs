@@ -28,17 +28,44 @@ type SupabaseEventJoinRow = {
   ends_at?: string | null;
   status?: string | null;
   venue_id?: string | null;
-  venues?: { name?: string | null } | null;
 };
 
 export class SupabaseRequestError extends Error {
   status: number;
-  details: string;
+  details: string | null;
+  hint: string | null;
+  code: string | null;
 
-  constructor(message: string, status: number, details: string) {
+  constructor(
+    message: string,
+    status: number,
+    details: string | null,
+    hint: string | null = null,
+    code: string | null = null,
+  ) {
     super(message);
     this.status = status;
     this.details = details;
+    this.hint = hint;
+    this.code = code;
+  }
+}
+
+type SupabaseErrorPayload = {
+  message?: string;
+  details?: string | null;
+  hint?: string | null;
+  code?: string | null;
+};
+
+async function parseSupabaseError(response: Response): Promise<SupabaseErrorPayload> {
+  const rawText = await response.text();
+  if (!rawText) return {};
+
+  try {
+    return JSON.parse(rawText) as SupabaseErrorPayload;
+  } catch {
+    return { message: rawText };
   }
 }
 
@@ -75,8 +102,14 @@ export async function supabaseSelect<T>(
   });
 
   if (!response.ok) {
-    const details = await response.text();
-    throw new SupabaseRequestError(`Supabase select failed (${table}).`, response.status, details);
+    const err = await parseSupabaseError(response);
+    throw new SupabaseRequestError(
+      err.message ?? `Supabase select failed (${table}).`,
+      response.status,
+      err.details ?? null,
+      err.hint ?? null,
+      err.code ?? null,
+    );
   }
 
   return (await response.json()) as T[];
@@ -98,8 +131,14 @@ export async function supabaseInsert<T extends Record<string, unknown>>(
   });
 
   if (!response.ok) {
-    const details = await response.text();
-    throw new SupabaseRequestError(`Supabase insert failed (${table}).`, response.status, details);
+    const err = await parseSupabaseError(response);
+    throw new SupabaseRequestError(
+      err.message ?? `Supabase insert failed (${table}).`,
+      response.status,
+      err.details ?? null,
+      err.hint ?? null,
+      err.code ?? null,
+    );
   }
 }
 
@@ -116,8 +155,14 @@ export async function supabaseRpc<T>(fnName: string, payload: Record<string, unk
   });
 
   if (!response.ok) {
-    const details = await response.text();
-    throw new SupabaseRequestError(`Supabase RPC failed (${fnName}).`, response.status, details);
+    const err = await parseSupabaseError(response);
+    throw new SupabaseRequestError(
+      err.message ?? `Supabase RPC failed (${fnName}).`,
+      response.status,
+      err.details ?? null,
+      err.hint ?? null,
+      err.code ?? null,
+    );
   }
 
   return (await response.json()) as T;
@@ -140,8 +185,14 @@ export async function supabaseUpdate<T extends Record<string, unknown>>(
   });
 
   if (!response.ok) {
-    const details = await response.text();
-    throw new SupabaseRequestError(`Supabase update failed (${table}).`, response.status, details);
+    const err = await parseSupabaseError(response);
+    throw new SupabaseRequestError(
+      err.message ?? `Supabase update failed (${table}).`,
+      response.status,
+      err.details ?? null,
+      err.hint ?? null,
+      err.code ?? null,
+    );
   }
 
   const body = (await response.json()) as unknown[];
@@ -157,13 +208,13 @@ function mapJoinedEvents(rows: SupabaseEventJoinRow[]): EventRecord[] {
     ends_at: row.ends_at ?? null,
     status: row.status ?? null,
     venue_id: row.venue_id ?? null,
-    venue_name: row.venues?.name ?? null,
+    venue_name: null,
   }));
 }
 
 export async function getEventByIdFromDatabase(eventId: string): Promise<EventRecord | null> {
   const params = new URLSearchParams({
-    select: 'id,title,status,event_date,starts_at,ends_at,venue_id,venues(name)',
+    select: 'id,title,status,event_date,starts_at,ends_at,venue_id',
     id: `eq.${eventId}`,
     limit: '1',
   });
@@ -174,8 +225,7 @@ export async function getEventByIdFromDatabase(eventId: string): Promise<EventRe
 
 export async function getEventsFromDatabase(): Promise<EventRecord[]> {
   const params = new URLSearchParams({
-    select: 'id,title,event_date,starts_at,ends_at,status,venue_id,venues(name)',
-    status: 'in.(live,upcoming)',
+    select: 'id,title,event_date,starts_at,ends_at,status,venue_id',
     order: 'starts_at.asc.nullslast,event_date.asc',
   });
 
