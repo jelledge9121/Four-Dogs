@@ -1,3 +1,7 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse } from 'next/server';
 
 import { createCustomerSessionToken } from '../../../lib/customer-session';
@@ -27,6 +31,41 @@ type CheckinRpcResult = {
 };
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
+
+function shouldRetryWithoutReferral(error: unknown): boolean {
+  if (!(error instanceof SupabaseRequestError)) return false;
+  if (![400, 404].includes(error.status)) return false;
+
+  const details = error.details.toLowerCase();
+  return details.includes('p_referral_code') || details.includes('function public.checkin_with_rewards');
+}
+
+async function runCheckinRpc(params: {
+  eventId: string;
+  phone: string;
+  name: string;
+  email: string;
+  referralCode: string;
+}): Promise<CheckinRpcResult> {
+  try {
+    return await supabaseRpc<CheckinRpcResult>('checkin_with_rewards', {
+      p_event_id: params.eventId,
+      p_phone_normalized: params.phone,
+      p_name: params.name || null,
+      p_email: params.email || null,
+      p_referral_code: params.referralCode || null,
+    });
+  } catch (error) {
+    if (!shouldRetryWithoutReferral(error)) throw error;
+
+    return supabaseRpc<CheckinRpcResult>('checkin_with_rewards', {
+      p_event_id: params.eventId,
+      p_phone_normalized: params.phone,
+      p_name: params.name || null,
+      p_email: params.email || null,
+    });
+  }
+}
 
 function buildSessionCookie(token: string): string {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -69,13 +108,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const result = await supabaseRpc<CheckinRpcResult>('checkin_with_rewards', {
-        p_event_id: eventId,
-        p_phone_normalized: phone,
-        p_name: name || null,
-        p_email: email || null,
-        p_referral_code: referralCode || null,
-      });
+      const result = await runCheckinRpc({ eventId, phone, name, email, referralCode });
       console.log('[checkin RPC result]', result);
 
       if (!result?.ok) {
