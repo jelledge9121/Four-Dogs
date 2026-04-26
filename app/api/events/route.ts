@@ -4,7 +4,7 @@ export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
 
-import { getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
+import { SupabaseRequestError, getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
 import { deriveEventStatus } from '../../../lib/event-status';
 
 function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
