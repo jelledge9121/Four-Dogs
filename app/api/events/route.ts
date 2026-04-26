@@ -2,40 +2,13 @@ export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 
-import { getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
-
-function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
-  events: T[],
-): T[] {
-  return [...events].sort((a, b) => {
-    const aRank = a.status === 'live' ? 0 : 1;
-    const bRank = b.status === 'live' ? 0 : 1;
-
-    if (aRank !== bRank) return aRank - bRank;
-
-    const aTime = a.starts_at ?? (a.event_date ? `${a.event_date}T00:00:00` : '');
-    const bTime = b.starts_at ?? (b.event_date ? `${b.event_date}T00:00:00` : '');
-
-    if (!aTime && !bTime) return 0;
-    if (!aTime) return 1;
-    if (!bTime) return -1;
-
-    return new Date(aTime).getTime() - new Date(bTime).getTime();
-  });
-}
+import { SupabaseRequestError, getEventByIdFromDatabase, getEventsFromDatabase } from '../../../lib/utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const selectedEventId = searchParams.get('event_id')?.trim();
 
   try {
-    // Auto-sync event statuses (close expired, open started)
-    try {
-      await supabaseRpc<void>('sync_event_statuses', {});
-    } catch {
-      // Non-fatal — continue even if sync fails
-    }
-
     if (selectedEventId) {
       const event = await getEventByIdFromDatabase(selectedEventId);
 
@@ -47,15 +20,34 @@ export async function GET(request: Request) {
     }
 
     const events = await getEventsFromDatabase();
-    const sortedEvents = sortEventsByLiveThenStart(events);
 
-    return NextResponse.json({ events: sortedEvents });
+    return NextResponse.json({ events });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    console.error('[api/events] Failed to load events:', errMsg);
+    if (error instanceof SupabaseRequestError) {
+      return NextResponse.json(
+        {
+          events: [],
+          error: {
+            message: error.message ?? '',
+            details: error.details ?? null,
+            hint: error.hint ?? null,
+            code: error.code ?? null,
+          },
+        },
+        { status: error.status || 500 },
+      );
+    }
 
     return NextResponse.json(
-      { events: [], error: errMsg },
+      {
+        events: [],
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          details: null,
+          hint: null,
+          code: null,
+        },
+      },
       { status: 500 },
     );
   }
