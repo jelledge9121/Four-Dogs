@@ -69,21 +69,42 @@ async function parseSupabaseError(response: Response): Promise<SupabaseErrorPayl
   }
 }
 
-function getSupabaseConfig(): { url: string; key: string } {
+function getSupabaseUrl(): string {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    throw new Error(
-      'Missing Supabase configuration. Required: SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ANON_KEY.',
-    );
+  if (!url) {
+    throw new Error('Missing Supabase URL. Set SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL.');
   }
 
-  return { url: url.replace(/\/$/, ''), key };
+  return url.replace(/\/$/, '');
 }
 
-function buildSupabaseHeaders(prefer?: string): SupabaseHeaders {
-  const { key } = getSupabaseConfig();
+function getSupabaseKey(mode: 'read' | 'write'): string {
+  if (mode === 'write') {
+    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRole) {
+      throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY for server-side write/RPC operations.');
+    }
+    return serviceRole;
+  }
+
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+  if (anon) return anon;
+
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRole) return serviceRole;
+
+  throw new Error('Missing Supabase read key. Set NEXT_PUBLIC_SUPABASE_ANON_KEY (preferred) or SUPABASE_SERVICE_ROLE_KEY.');
+}
+
+function getSupabaseConfig(mode: 'read' | 'write'): { url: string; key: string } {
+  const url = getSupabaseUrl();
+  const key = getSupabaseKey(mode);
+
+  return { url, key };
+}
+
+function buildSupabaseHeaders(mode: 'read' | 'write', prefer?: string): SupabaseHeaders {
+  const { key } = getSupabaseConfig(mode);
   return {
     apikey: key,
     Authorization: `Bearer ${key}`,
@@ -95,9 +116,9 @@ export async function supabaseSelect<T>(
   table: string,
   params: URLSearchParams,
 ): Promise<T[]> {
-  const { url } = getSupabaseConfig();
+  const { url } = getSupabaseConfig('read');
   const response = await fetch(`${url}/rest/v1/${table}?${params.toString()}`, {
-    headers: buildSupabaseHeaders(),
+    headers: buildSupabaseHeaders('read'),
     cache: 'no-store',
   });
 
@@ -119,11 +140,11 @@ export async function supabaseInsert<T extends Record<string, unknown>>(
   table: string,
   payload: T,
 ): Promise<void> {
-  const { url } = getSupabaseConfig();
+  const { url } = getSupabaseConfig('write');
   const response = await fetch(`${url}/rest/v1/${table}`, {
     method: 'POST',
     headers: {
-      ...buildSupabaseHeaders('return=minimal'),
+      ...buildSupabaseHeaders('write', 'return=minimal'),
       'content-type': 'application/json',
     },
     body: JSON.stringify(payload),
@@ -143,11 +164,11 @@ export async function supabaseInsert<T extends Record<string, unknown>>(
 }
 
 export async function supabaseRpc<T>(fnName: string, payload: Record<string, unknown>): Promise<T> {
-  const { url } = getSupabaseConfig();
+  const { url } = getSupabaseConfig('write');
   const response = await fetch(`${url}/rest/v1/rpc/${fnName}`, {
     method: 'POST',
     headers: {
-      ...buildSupabaseHeaders(),
+      ...buildSupabaseHeaders('write'),
       'content-type': 'application/json',
     },
     body: JSON.stringify(payload),
@@ -173,11 +194,11 @@ export async function supabaseUpdate<T extends Record<string, unknown>>(
   payload: T,
   filters: URLSearchParams,
 ): Promise<number> {
-  const { url } = getSupabaseConfig();
+  const { url } = getSupabaseConfig('write');
   const response = await fetch(`${url}/rest/v1/${table}?${filters.toString()}`, {
     method: 'PATCH',
     headers: {
-      ...buildSupabaseHeaders('return=representation'),
+      ...buildSupabaseHeaders('write', 'return=representation'),
       'content-type': 'application/json',
     },
     body: JSON.stringify(payload),
@@ -225,7 +246,7 @@ export async function getEventByIdFromDatabase(eventId: string): Promise<EventRe
 
 export async function getEventsFromDatabase(): Promise<EventRecord[]> {
   const params = new URLSearchParams({
-    select: 'id,title,event_date,starts_at,ends_at,status,venue_id',
+    select: 'id,title,event_date,starts_at,ends_at,status,venue_id,venues(name)',
     order: 'starts_at.asc.nullslast,event_date.asc',
   });
 
