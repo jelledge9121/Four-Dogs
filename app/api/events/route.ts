@@ -1,8 +1,11 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
 
 import { getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
+import { deriveEventStatus } from '../../../lib/event-status';
 
 function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
   events: T[],
@@ -47,9 +50,19 @@ export async function GET(request: Request) {
     }
 
     const events = await getEventsFromDatabase();
-    const sortedEvents = sortEventsByLiveThenStart(events);
+    const filteredEvents = events.filter((event) => deriveEventStatus(event) !== 'closed');
+    const sortedEvents = sortEventsByLiveThenStart(filteredEvents);
 
-    return NextResponse.json({ events: sortedEvents });
+    return NextResponse.json(
+      { events: sortedEvents },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      },
+    );
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[api/events] Failed to load events:', errMsg);
