@@ -6,8 +6,8 @@ export default function FourDogsLogo() {
       <Image
         src="/four-dogs-logo.png"
         alt="Four Dogs Entertainment"
-        width={120}
-        height={120}
+        width={168}
+        height={168}
         priority
       />
     </div>
