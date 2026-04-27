@@ -8,7 +8,7 @@ body {
 
 .fd-checkin-page {
   min-height: 100vh;
-  padding: .3rem .8rem 1.2rem;
+  padding: .55rem 1rem 2rem;
   background:
     radial-gradient(circle at 12% 4%, rgba(69, 175, 208, 0.2), transparent 32%),
     radial-gradient(circle at 88% 0%, rgba(72, 183, 131, 0.18), transparent 33%),
@@ -21,13 +21,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .4rem;
+  gap: .78rem;
 }
 .fd-checkin-brand-header {
   width: 100%;
   text-align: center;
   display: grid;
-  gap: .12rem;
+  gap: .38rem;
   justify-items: center;
   padding-top: 0;
 }
@@ -38,49 +38,48 @@ body {
 }
 .fd-checkin-tagline {
   margin: 0;
-  font-size: .9rem;
-  letter-spacing: .03em;
+  font-size: clamp(1rem, 3.6vw, 1.16rem);
+  letter-spacing: .05em;
   color: #b9ffe9;
   font-weight: 700;
-  line-height: 1.1;
-  white-space: nowrap;
-  text-shadow: 0 0 12px rgba(109, 255, 217, 0.24), 0 0 22px rgba(83, 172, 255, 0.18);
+  line-height: 1.3;
+  text-shadow: 0 0 14px rgba(109, 255, 217, 0.24), 0 0 26px rgba(83, 172, 255, 0.18);
 }
 .fd-checkin-brand-header h1 {
   margin: 0;
   letter-spacing: .045em;
   text-transform: uppercase;
-  font-weight: 800;
-  font-size: .95rem;
-  color: #def6ff;
+  font-weight: 900;
+  font-size: clamp(1.55rem, 6.8vw, 2.15rem);
+  color: #eff6ff;
 }
 .fd-checkin-card {
   width: 100%;
   border: 1px solid rgba(107, 228, 236, 0.32);
   border-radius: 18px;
   background: linear-gradient(165deg, rgba(15, 34, 64, 0.94), rgba(10, 19, 37, 0.97));
-  padding: .72rem;
+  padding: .94rem;
   box-shadow: 0 18px 36px rgba(4, 7, 16, 0.5);
 }
-.fd-checkin-form, .fd-checkin-success { display: grid; gap: .55rem; }
+.fd-checkin-form, .fd-checkin-success { display: grid; gap: .78rem; }
 .fd-checkin-event-intro {
   display: grid;
-  gap: .22rem;
-  margin: 0;
+  gap: .45rem;
+  margin: 0 0 .16rem;
 }
 .fd-checkin-event-intro h2 {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: .08em;
-  font-size: .88rem;
+  font-size: .96rem;
   font-weight: 800;
   color: #e8f6ff;
 }
 .fd-checkin-event-intro p {
   margin: 0;
   color: #d4e8f8;
-  line-height: 1.3;
-  font-size: .84rem;
+  line-height: 1.45;
+  font-size: .9rem;
 }
 .fd-checkin-event-block {
   border: 1px solid rgba(117, 229, 202, 0.28);
@@ -289,29 +288,13 @@ body {
 .fd-logo img {
   width: 100%;
   height: auto;
-  max-width: 5.5rem;
+  max-width: 10.5rem;
 }
-@media (min-width: 768px) {
-  .fd-checkin-page { padding: .9rem 1rem 2.2rem; }
-  .fd-checkin-shell { gap: 1rem; }
-  .fd-checkin-brand-header { gap: .55rem; padding-top: .2rem; }
-  .fd-checkin-brand-header h1 {
-    font-size: clamp(1.85rem, 8vw, 2.4rem);
-    font-weight: 900;
-    color: #eff6ff;
-  }
-  .fd-checkin-tagline {
-    font-size: clamp(1rem, 3.8vw, 1.2rem);
-    letter-spacing: .03em;
-    line-height: 1.35;
-    white-space: normal;
-  }
-  .fd-checkin-card { padding: 1.05rem; }
-  .fd-checkin-form, .fd-checkin-success { gap: .78rem; }
-  .fd-checkin-event-intro { gap: .45rem; margin: .1rem 0 .2rem; }
-  .fd-checkin-event-intro h2 { font-size: .96rem; }
-  .fd-checkin-event-intro p { font-size: .9rem; line-height: 1.45; }
-  .fd-logo img { max-width: 10.5rem; }
+@media (min-width: 430px) {
+  .fd-checkin-page { padding-top: .34rem; }
+  .fd-checkin-shell { gap: .6rem; }
+  .fd-checkin-brand-header { gap: .28rem; }
+  .fd-logo img { max-width: 9.6rem; }
 }
 
 .fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #ebf8ff; }
