@@ -50,7 +50,7 @@ body {
   letter-spacing: .05em;
   text-transform: uppercase;
   font-weight: 900;
-  font-size: clamp(1.85rem, 8vw, 2.4rem);
+  font-size: clamp(1.55rem, 6.8vw, 2.15rem);
   color: #eff6ff;
 }
 .fd-checkin-card {
@@ -290,6 +290,13 @@ body {
   height: auto;
   max-width: 10.5rem;
 }
+@media (min-width: 430px) {
+  .fd-checkin-page { padding-top: .34rem; }
+  .fd-checkin-shell { gap: .6rem; }
+  .fd-checkin-brand-header { gap: .28rem; }
+  .fd-logo img { max-width: 9.6rem; }
+}
+
 .fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #ebf8ff; }
 .fd-logo-sub { margin: .2rem 0 0; text-transform: uppercase; font-size: .78rem; letter-spacing: .16em; color: #b5edff; }
 .fd-host-page { min-height: 100vh; background: #08070f; color: #f5f3ff; padding: 1rem; }
