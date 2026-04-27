@@ -318,6 +318,14 @@ export default function CheckInForm() {
 
   return (
     <form onSubmit={handleSubmit} className="fd-checkin-form" noValidate>
+      <section className="fd-checkin-event-intro" aria-label="Choose your event">
+        <h2>Choose Your Event</h2>
+        <p>
+          Select tonight&apos;s event below and check in to earn rewards, track visits, and enjoy a doggone good
+          time.
+        </p>
+      </section>
+
       <section className="fd-checkin-event-block" aria-label="Selected event">
         <p className="fd-checkin-event-label">You are checking into</p>
         {selectedEvent ? (

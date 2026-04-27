@@ -10,7 +10,7 @@ export default function CheckInPage() {
             <FourDogsLogo />
           </div>
           <h1>Four Dogs Entertainment</h1>
-          <p className="fd-checkin-tagline">For a Doggone Good Time</p>
+          <p className="fd-checkin-tagline">Check In For a Doggone Good Time</p>
         </header>
 
         <section className="fd-checkin-card" aria-label="Check-in form">
