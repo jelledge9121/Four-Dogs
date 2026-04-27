@@ -8,7 +8,7 @@ body {
 
 .fd-checkin-page {
   min-height: 100vh;
-  padding: 1.25rem 1rem 2rem;
+  padding: .22rem .9rem 1.6rem;
   background:
     radial-gradient(circle at 12% 4%, rgba(69, 175, 208, 0.2), transparent 32%),
     radial-gradient(circle at 88% 0%, rgba(72, 183, 131, 0.18), transparent 33%),
@@ -21,14 +21,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .8rem;
+  gap: .48rem;
 }
 .fd-checkin-brand-header {
   width: 100%;
   text-align: center;
   display: grid;
-  gap: .4rem;
+  gap: .18rem;
   justify-items: center;
+  padding-top: 0;
 }
 .fd-checkin-logo-wrap {
   width: 100%;
@@ -37,18 +38,19 @@ body {
 }
 .fd-checkin-tagline {
   margin: 0;
-  text-transform: uppercase;
-  font-size: .78rem;
-  letter-spacing: .14em;
-  color: #8fead0;
+  font-size: clamp(.92rem, 3.2vw, 1.05rem);
+  letter-spacing: .05em;
+  color: #b9ffe9;
   font-weight: 700;
+  line-height: 1.22;
+  text-shadow: 0 0 14px rgba(109, 255, 217, 0.24), 0 0 26px rgba(83, 172, 255, 0.18);
 }
 .fd-checkin-brand-header h1 {
   margin: 0;
   letter-spacing: .05em;
   text-transform: uppercase;
   font-weight: 900;
-  font-size: clamp(1.85rem, 8vw, 2.4rem);
+  font-size: clamp(1.55rem, 6.8vw, 2.15rem);
   color: #eff6ff;
 }
 .fd-checkin-card {
@@ -56,10 +58,29 @@ body {
   border: 1px solid rgba(107, 228, 236, 0.32);
   border-radius: 18px;
   background: linear-gradient(165deg, rgba(15, 34, 64, 0.94), rgba(10, 19, 37, 0.97));
-  padding: .95rem;
+  padding: .78rem;
   box-shadow: 0 18px 36px rgba(4, 7, 16, 0.5);
 }
-.fd-checkin-form, .fd-checkin-success { display: grid; gap: .78rem; }
+.fd-checkin-form, .fd-checkin-success { display: grid; gap: .62rem; }
+.fd-checkin-event-intro {
+  display: grid;
+  gap: .28rem;
+  margin: 0 0 .08rem;
+}
+.fd-checkin-event-intro h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .96rem;
+  font-weight: 800;
+  color: #e8f6ff;
+}
+.fd-checkin-event-intro p {
+  margin: 0;
+  color: #d4e8f8;
+  line-height: 1.36;
+  font-size: .9rem;
+}
 .fd-checkin-event-block {
   border: 1px solid rgba(117, 229, 202, 0.28);
   border-radius: 14px;
@@ -256,14 +277,26 @@ body {
 }
 .fd-logo {
   width: 100%;
-  max-width: 14rem;
-  border: 1px solid rgba(95, 226, 241, .45);
-  border-radius: 16px;
-  padding: .75rem;
+  max-width: 16rem;
+  padding: 0;
   text-align: center;
-  background: rgba(8, 49, 69, 0.48);
-  box-shadow: 0 10px 30px rgba(36, 176, 215, 0.2);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
+.fd-logo img {
+  width: 100%;
+  height: auto;
+  max-width: 8.9rem;
+}
+@media (min-width: 430px) {
+  .fd-checkin-page { padding-top: .34rem; }
+  .fd-checkin-shell { gap: .6rem; }
+  .fd-checkin-brand-header { gap: .28rem; }
+  .fd-logo img { max-width: 9.6rem; }
+}
+
 .fd-logo-title { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #ebf8ff; }
 .fd-logo-sub { margin: .2rem 0 0; text-transform: uppercase; font-size: .78rem; letter-spacing: .16em; color: #b5edff; }
 .fd-host-page { min-height: 100vh; background: #08070f; color: #f5f3ff; padding: 1rem; }
