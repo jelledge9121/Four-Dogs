@@ -8,7 +8,7 @@ import { createCustomerSessionToken } from '../../../lib/customer-session';
 import { checkRateLimit } from '../../../lib/rate-limit';
 import { buildRewardSnapshot } from '../../../lib/rewards';
 import { normalizePhone } from '../../../lib/phone';
-import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc } from '../../../lib/utils';
+import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc, supabaseSelect } from '../../../lib/utils';
 
 type CheckinBody = {
   event_id?: string;
@@ -34,20 +34,23 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
 
 type CustomerAdminRow = {
   id: string;
+  full_name?: string | null;
   is_admin?: boolean | null;
 };
 
-async function getCustomerAdminByPhone(phone: string): Promise<{ customerId: string | null; isAdmin: boolean }> {
-  const rows = await supabaseRpc<CustomerAdminRow[]>('run_sql', {
-    query: `
-      select id, is_admin
-      from customers
-      where regexp_replace(phone, '[^0-9]', '', 'g') like '%' || right($1, 10)
-      order by created_at asc
-      limit 1
-    `,
-    params: [phone],
-  });
+async function getCustomerAdminByPhone(inputPhone: string): Promise<{ customerId: string | null; isAdmin: boolean }> {
+  const normalizedInput = inputPhone.replace(/\D/g, '');
+  if (!normalizedInput) return { customerId: null, isAdmin: false };
+
+  const rows = await supabaseSelect<CustomerAdminRow>(
+    'customers',
+    new URLSearchParams({
+      select: 'id,full_name,is_admin',
+      phone_normalized: `eq.${normalizedInput}`,
+      limit: '1',
+    }),
+  );
+
   const row = rows[0];
   return {
     customerId: row?.id ?? null,
@@ -130,7 +133,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
     }
 
-    const { isAdmin } = await getCustomerAdminByPhone(phone);
+    const { isAdmin } = await getCustomerAdminByPhone(body.phone ?? '');
     const eventStatus = (dbEvent.status ?? '').toLowerCase();
     if (!isAdmin && eventStatus !== 'live') {
       return NextResponse.json(
