@@ -31,15 +31,15 @@ export default function HostPage() {
   const [selectedEventId, setSelectedEventId] = useState('');
 
   return (
-    <main className="min-h-screen bg-[#08070f] text-violet-50">
+    <main className="fd-host-page">
       <HostAuthGate>
         {(auth) => (
-          <div className="mx-auto w-full max-w-5xl space-y-4 px-3 py-4 sm:px-4 sm:py-6">
+          <div className="fd-host-wrap">
             <OfflineIndicator />
             <EventHeader title="Host Dashboard" subtitle="Live moderation and reward controls" />
             <EventStatusControl hostKey={auth.hostKey} hostName={auth.hostName} />
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="fd-grid fd-grid-2">
               <QRCodeDisplay />
               <PlayerSearch />
             </div>
@@ -52,7 +52,7 @@ export default function HostPage() {
               onChanged={() => setRefreshTick((value) => value + 1)}
             />
 
-            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <section className="fd-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
               {pending.slice(0, 6).map((reward) => (
                 <TeamCard
                   key={reward.id}
