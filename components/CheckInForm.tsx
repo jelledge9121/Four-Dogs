@@ -319,11 +319,9 @@ export default function CheckInForm() {
   return (
     <form onSubmit={handleSubmit} className="fd-checkin-form" noValidate>
       <section className="fd-checkin-event-intro" aria-label="Choose your event">
+        <p className="fd-checkin-event-kicker">For a Doggone Good Time</p>
         <h2>Choose Your Event</h2>
-        <p>
-          Select tonight&apos;s event below and check in to earn rewards, track visits, and enjoy a doggone good
-          time.
-        </p>
+        <p>Select an event below to check in for trivia and music bingo nights.</p>
       </section>
 
       <section className="fd-checkin-event-block" aria-label="Selected event">
