@@ -510,9 +510,18 @@ body {
 }
 .fd-checkin-card, .fd-panel { border-radius: 16px; padding: .9rem; }
 .fd-header-rule { width: min(170px, 74%); height: 1px; background: linear-gradient(90deg, transparent, var(--fd-line), transparent); margin-top: .25rem; }
-.fd-logo { position: relative; padding: .6rem; border-radius: 999px; background: radial-gradient(circle, rgba(123, 203, 244, .18), rgba(123, 203, 244, 0) 72%); }
+.fd-logo { position: relative; padding: .4rem; border-radius: 999px; overflow: hidden; }
 .fd-logo::before, .fd-logo::after { content: ''; position: absolute; border-radius: 999px; inset: -8px; border: 1px solid rgba(123, 203, 244, .42); }
 .fd-logo::after { inset: -14px; border-color: rgba(123, 203, 244, .2); }
+.fd-logo img {
+  width: 100%;
+  height: 100%;
+  max-width: 8rem;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: transparent;
+}
 .fd-checkin-form label, .fd-checkin-event-label, .fd-event-option-label { color: #d4ecff; }
 .fd-checkin-input, .fd-host-input { background: #0d241c; border: 1px solid rgba(123, 203, 244, .4); color: var(--fd-text); }
 .fd-checkin-input::placeholder { color: #9cbfb1; }
