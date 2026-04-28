@@ -8,7 +8,7 @@ import { createCustomerSessionToken } from '../../../lib/customer-session';
 import { checkRateLimit } from '../../../lib/rate-limit';
 import { buildRewardSnapshot } from '../../../lib/rewards';
 import { normalizePhone } from '../../../lib/phone';
-import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc, supabaseSelect } from '../../../lib/utils';
+import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc } from '../../../lib/utils';
 
 type CheckinBody = {
   event_id?: string;
@@ -38,12 +38,16 @@ type CustomerAdminRow = {
 };
 
 async function getCustomerAdminByPhone(phone: string): Promise<{ customerId: string | null; isAdmin: boolean }> {
-  const params = new URLSearchParams({
-    select: 'id,is_admin',
-    phone_normalized: `eq.${phone}`,
-    limit: '1',
+  const rows = await supabaseRpc<CustomerAdminRow[]>('run_sql', {
+    query: `
+      select id, is_admin
+      from customers
+      where regexp_replace(phone, '[^0-9]', '', 'g') like '%' || right($1, 10)
+      order by created_at asc
+      limit 1
+    `,
+    params: [phone],
   });
-  const rows = await supabaseSelect<CustomerAdminRow>('customers', params);
   const row = rows[0];
   return {
     customerId: row?.id ?? null,
