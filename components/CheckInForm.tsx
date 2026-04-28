@@ -66,6 +66,7 @@ function formatEventSchedule(event: EventRow): string {
 }
 
 export default function CheckInForm() {
+  const [currentStep, setCurrentStep] = useState<'event' | 'details'>('event');
   const [teamName, setTeamName] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
@@ -113,6 +114,9 @@ export default function CheckInForm() {
         }
 
         setSelectedEventId(eventId);
+        if (loadedEvents.length === 1) {
+          setCurrentStep('details');
+        }
         setEventsLoadError(null);
       } catch {
         if (!isMounted) return;
@@ -383,7 +387,7 @@ export default function CheckInForm() {
         )}
       </section>
 
-      {events.length > 1 ? (
+      {events.length > 1 && currentStep === 'event' ? (
         <section className="fd-event-option-wrap" aria-label="Available events">
           <p className="fd-event-option-label">Upcoming Events</p>
           <div className="fd-event-option-list">
@@ -395,7 +399,10 @@ export default function CheckInForm() {
               <button
                 key={eventItem.id}
                 type="button"
-                onClick={() => setSelectedEventId(eventItem.id)}
+                onClick={() => {
+                  setSelectedEventId(eventItem.id);
+                  setCurrentStep('details');
+                }}
                 className={`fd-event-option-card ${isSelected ? 'is-selected' : ''}`}
                 aria-pressed={isSelected}
               >
@@ -414,6 +421,8 @@ export default function CheckInForm() {
         </section>
       ) : null}
 
+      {currentStep === 'details' ? (
+        <>
       <div className="fd-form-group">
         <label htmlFor="team-name">Team Name (optional)</label>
         <input
@@ -492,6 +501,8 @@ export default function CheckInForm() {
       </button>
 
       <p className="fd-trust-copy">No spam. Just rewards.</p>
+        </>
+      ) : null}
     </form>
   );
 }
