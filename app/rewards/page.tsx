@@ -9,7 +9,8 @@ export default function RewardsPage() {
           <div className="fd-checkin-logo-wrap">
             <FourDogsLogo />
           </div>
-          <h1>Four Dogs Entertainment</h1>
+          <h1 className="fd-logo-title">Four Dogs Entertainment</h1>
+          <div className="fd-header-rule" aria-hidden="true" />
           <p className="fd-checkin-tagline">For a Doggone Good Time</p>
         </header>
 

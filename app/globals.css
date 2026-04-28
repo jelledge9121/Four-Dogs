@@ -487,6 +487,65 @@ body {
 .fd-grid { display: grid; gap: .8rem; }
 @media (min-width: 860px) { .fd-grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 
+/* Carolina Blue + Forest Green premium refresh */
+:root {
+  --fd-forest-950: #06150f;
+  --fd-forest-900: #0a2219;
+  --fd-line: #67c8ef;
+  --fd-accent: #7bcbf4;
+  --fd-text: #ecf8f2;
+  --fd-amber: #f1b53a;
+}
+.fd-checkin-page,
+.fd-host-page {
+  background: radial-gradient(circle at 50% 0, rgba(123, 203, 244, .14), transparent 42%),
+    linear-gradient(180deg, var(--fd-forest-950), var(--fd-forest-900) 45%, #081d16);
+  color: var(--fd-text);
+}
+.fd-checkin-shell { max-width: 30rem; gap: .75rem; }
+.fd-checkin-hero, .fd-checkin-card, .fd-panel {
+  background: linear-gradient(165deg, rgba(19, 53, 41, .92), rgba(11, 34, 26, .96));
+  border: 1px solid rgba(103, 200, 239, .3);
+  box-shadow: 0 14px 30px rgba(1, 8, 6, .45), inset 0 1px 0 rgba(149, 215, 244, .15);
+}
+.fd-checkin-card, .fd-panel { border-radius: 16px; padding: .9rem; }
+.fd-header-rule { width: min(170px, 74%); height: 1px; background: linear-gradient(90deg, transparent, var(--fd-line), transparent); margin-top: .25rem; }
+.fd-logo { position: relative; padding: .6rem; border-radius: 999px; background: radial-gradient(circle, rgba(123, 203, 244, .18), rgba(123, 203, 244, 0) 72%); }
+.fd-logo::before, .fd-logo::after { content: ''; position: absolute; border-radius: 999px; inset: -8px; border: 1px solid rgba(123, 203, 244, .42); }
+.fd-logo::after { inset: -14px; border-color: rgba(123, 203, 244, .2); }
+.fd-checkin-form label, .fd-checkin-event-label, .fd-event-option-label { color: #d4ecff; }
+.fd-checkin-input, .fd-host-input { background: #0d241c; border: 1px solid rgba(123, 203, 244, .4); color: var(--fd-text); }
+.fd-checkin-input::placeholder { color: #9cbfb1; }
+.fd-checkin-input:focus, .fd-host-input:focus { outline: none; border-color: var(--fd-accent); box-shadow: 0 0 0 2px rgba(123, 203, 244, .24); }
+.fd-primary-button, .fd-checkin-button { background: linear-gradient(180deg, #7ecaf0, #63b7e8); border: 1px solid rgba(167, 228, 255, .9); color: #062014; font-weight: 800; }
+.fd-success-head::before {
+  content: '';
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto .55rem;
+  background-image: url('/four-dogs-logo.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 10px rgba(123, 203, 244, .32));
+}
+.fd-success-stat:nth-child(2) {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  justify-content: flex-start;
+  border-radius: 999px;
+  padding: .5rem .8rem;
+  background: linear-gradient(90deg, rgba(241, 181, 58, .22), rgba(241, 181, 58, .08));
+  border-color: rgba(241, 181, 58, .52);
+}
+.fd-success-stat:nth-child(2) strong { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; line-height: 1; color: var(--fd-amber); margin: 0; min-width: 2.2ch; }
+.fd-success-stat:nth-child(2) p { line-height: 1.1; margin: 0; color: #ffe2a3; font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; }
+.fd-success-stat:nth-child(2) p::after { content: '\A available now'; white-space: pre; }
+.fd-team-points { color: var(--fd-amber); }
+.fd-host-wrap { max-width: 70rem; margin: 0 auto; display: grid; gap: .9rem; padding: 1rem; }
+
 .fd-eyebrow {
   margin: 0;
   text-transform: uppercase;
@@ -567,3 +626,8 @@ body {
 .fd-approve-button { border: 1px solid rgba(120,240,160,.6); background: rgba(54,173,93,.22); color: #e8ffee; }
 .fd-reject-button { border: 1px solid rgba(255,140,140,.6); background: rgba(232,78,78,.22); color: #ffecec; }
 .fd-team-modal { margin-top: .6rem; }
+
+/* Premium refresh final overrides */
+.fd-primary-button, .fd-checkin-button { background: linear-gradient(180deg, #7ecaf0, #63b7e8); border: 1px solid rgba(167, 228, 255, .9); color: #062014; font-weight: 800; }
+.fd-host-input, .fd-checkin-input { background: #0d241c; border-color: rgba(123, 203, 244, .4); color: var(--fd-text); }
+.fd-team-points { color: var(--fd-amber); }
