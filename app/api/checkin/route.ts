@@ -8,7 +8,7 @@ import { createCustomerSessionToken } from '../../../lib/customer-session';
 import { checkRateLimit } from '../../../lib/rate-limit';
 import { buildRewardSnapshot } from '../../../lib/rewards';
 import { normalizePhone } from '../../../lib/phone';
-import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc } from '../../../lib/utils';
+import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc, supabaseSelect } from '../../../lib/utils';
 
 type CheckinBody = {
   event_id?: string;
@@ -31,6 +31,25 @@ type CheckinRpcResult = {
 };
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
+
+type CustomerAdminRow = {
+  id: string;
+  is_admin?: boolean | null;
+};
+
+async function getCustomerAdminByPhone(phone: string): Promise<{ customerId: string | null; isAdmin: boolean }> {
+  const params = new URLSearchParams({
+    select: 'id,is_admin',
+    phone_normalized: `eq.${phone}`,
+    limit: '1',
+  });
+  const rows = await supabaseSelect<CustomerAdminRow>('customers', params);
+  const row = rows[0];
+  return {
+    customerId: row?.id ?? null,
+    isAdmin: Boolean(row?.is_admin),
+  };
+}
 
 function shouldRetryWithoutReferral(error: unknown): boolean {
   if (!(error instanceof SupabaseRequestError)) return false;
@@ -105,6 +124,15 @@ export async function POST(request: Request) {
     const dbEvent = await getEventByIdFromDatabase(eventId);
     if (!dbEvent) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+    }
+
+    const { isAdmin } = await getCustomerAdminByPhone(phone);
+    const eventStatus = (dbEvent.status ?? '').toLowerCase();
+    if (!isAdmin && eventStatus !== 'live') {
+      return NextResponse.json(
+        { error: 'Check-in is only available while this event is live.' },
+        { status: 403 },
+      );
     }
 
     try {
