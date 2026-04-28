@@ -346,7 +346,9 @@ export default function CheckInForm() {
       </section>
 
       {events.length > 1 ? (
-        <section className="fd-event-option-list" aria-label="Available events">
+        <section className="fd-event-option-wrap" aria-label="Available events">
+          <p className="fd-event-option-label">Upcoming Events</p>
+          <div className="fd-event-option-list">
           {events.map((eventItem) => {
             const isSelected = eventItem.id === selectedEventId;
             const statusClass = eventItem.status === 'live' ? 'is-live' : 'is-upcoming';
@@ -370,6 +372,7 @@ export default function CheckInForm() {
               </button>
             );
           })}
+          </div>
         </section>
       ) : null}
 
