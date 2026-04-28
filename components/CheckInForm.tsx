@@ -34,6 +34,8 @@ type CheckinSuccess = {
     points_to_unlock: number;
     reward: RewardDefinition;
   } | null;
+  customer_name?: string | null;
+  event_id?: string | null;
 };
 
 function selectDefaultEvent(events: EventRow[]): string {
@@ -77,6 +79,8 @@ export default function CheckInForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successPayload, setSuccessPayload] = useState<CheckinSuccess | null>(null);
   const [copied, setCopied] = useState(false);
+  const [shareAwarded, setShareAwarded] = useState<string>('');
+  const [reminderOptIn, setReminderOptIn] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -195,12 +199,23 @@ export default function CheckInForm() {
     }
   }
 
+  async function claimBonus(action: 'facebook_follow' | 'event_share') {
+    const response = await fetch('/api/bonus-actions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action, event_id: selectedEventId }),
+    });
+    const payload = (await response.json()) as { awarded?: boolean; message?: string };
+    setShareAwarded(payload.awarded ? 'Bonus points added!' : payload.message || 'Already claimed.');
+  }
+
   if (status === 'success' && successPayload) {
     return (
       <div className="fd-checkin-success">
         <div className="fd-success-head">
           <p>Check-In Confirmed</p>
           <h2>You&apos;re In 🎉</h2>
+          <p className="fd-checkin-info">Welcome back, {(participantName || 'friend').split(' ')[0]}.</p>
         </div>
 
         <div className="fd-success-stats">
@@ -241,6 +256,9 @@ export default function CheckInForm() {
             {successPayload.next_reward.reward.title}.
           </p>
         ) : null}
+        <p className="fd-checkin-info">
+          Tier: {successPayload.total_visits >= 25 ? 'Pack Leader' : successPayload.total_visits >= 10 ? 'Top Dog' : successPayload.total_visits >= 5 ? 'Regular' : 'Rookie'} · {Math.max(0, (successPayload.total_visits >= 25 ? 25 : successPayload.total_visits >= 10 ? 25 : successPayload.total_visits >= 5 ? 10 : 5) - successPayload.total_visits)} visits until next tier.
+        </p>
 
         {successPayload.available_rewards.length > 0 ? (
           <div>
@@ -296,6 +314,26 @@ export default function CheckInForm() {
             </button>
           </div>
         ) : null}
+
+        <div className="fd-rewards-copy" style={{ marginTop: '0.5rem' }}>
+          <p style={{ color: '#9eeed9', fontWeight: 700 }}>Earn Bonus Points</p>
+          <p>Bring your crew. Earn more rewards.</p>
+          <p>Share this event or bring a first-time guest to earn bonus points.</p>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button type="button" className="fd-checkin-button" onClick={() => claimBonus('event_share')}>Claim +2 Event Share</button>
+            <button type="button" className="fd-checkin-button" onClick={() => window.open('https://www.facebook.com/profile.php?id=61574086319373', '_blank')}>Follow on Facebook</button>
+            <button type="button" className="fd-checkin-button" onClick={() => claimBonus('facebook_follow')}>Claim +1 Follow</button>
+          </div>
+          {typeof navigator !== 'undefined' && navigator.share ? <button type="button" className="fd-checkin-button" onClick={() => navigator.share({ title: selectedEvent?.title || 'Four Dogs Event', url: window.location.href })}>Native Share</button> : null}
+          {shareAwarded ? <p className="fd-checkin-info">{shareAwarded}</p> : null}
+          <p className="fd-checkin-info">Bring-a-Friend +5 bonus will be awarded when referred first-time guest check-in validation is enabled.</p>
+        </div>
+
+        <div className="fd-rewards-copy">
+          <p style={{ color: '#9eeed9', fontWeight: 700 }}>Reminders</p>
+          <label><input type="checkbox" checked={reminderOptIn} onChange={(e) => setReminderOptIn(e.target.checked)} /> Want a reminder before the next Four Dogs event?</label>
+          <p className="fd-checkin-info">Reminder preference UI captured locally for now. Persistence pending schema support.</p>
+        </div>
 
         <button
           type="button"
