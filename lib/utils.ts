@@ -28,6 +28,7 @@ type SupabaseEventJoinRow = {
   ends_at?: string | null;
   status?: string | null;
   venue_id?: string | null;
+  venues?: { name?: string | null } | Array<{ name?: string | null }> | null;
 };
 
 export class SupabaseRequestError extends Error {
@@ -229,7 +230,7 @@ function mapJoinedEvents(rows: SupabaseEventJoinRow[]): EventRecord[] {
     ends_at: row.ends_at ?? null,
     status: row.status ?? null,
     venue_id: row.venue_id ?? null,
-    venue_name: null,
+    venue_name: Array.isArray(row.venues) ? (row.venues[0]?.name ?? null) : (row.venues?.name ?? null),
   }));
 }
 
@@ -244,11 +245,14 @@ export async function getEventByIdFromDatabase(eventId: string): Promise<EventRe
   return mapJoinedEvents(events)[0] ?? null;
 }
 
-export async function getEventsFromDatabase(): Promise<EventRecord[]> {
+export async function getEventsFromDatabase(statuses?: string[]): Promise<EventRecord[]> {
   const params = new URLSearchParams({
     select: 'id,title,event_date,starts_at,ends_at,status,venue_id,venues(name)',
     order: 'starts_at.asc.nullslast,event_date.asc',
   });
+  if (statuses && statuses.length > 0) {
+    params.set('status', `in.(${statuses.join(',')})`);
+  }
 
   const events = await supabaseSelect<SupabaseEventJoinRow>('events', params);
   return mapJoinedEvents(events);

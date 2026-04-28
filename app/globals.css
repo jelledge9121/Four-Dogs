@@ -8,20 +8,36 @@ body {
 
 .fd-checkin-page {
   min-height: 100vh;
-  padding: .55rem 1rem 2rem;
+  padding: 1rem 1rem 2.4rem;
   background:
-    radial-gradient(circle at 12% 4%, rgba(69, 175, 208, 0.2), transparent 32%),
-    radial-gradient(circle at 88% 0%, rgba(72, 183, 131, 0.18), transparent 33%),
-    radial-gradient(circle at top, #1b2242 0%, #0f1330 48%, #090c1b 100%);
+    radial-gradient(circle at 10% -4%, rgba(89, 212, 230, 0.22), transparent 33%),
+    radial-gradient(circle at 92% -2%, rgba(68, 205, 150, 0.22), transparent 36%),
+    radial-gradient(circle at 50% 110%, rgba(26, 129, 151, 0.2), transparent 44%),
+    linear-gradient(180deg, #0f1735 0%, #0c142c 44%, #091022 100%);
 }
 .fd-checkin-shell {
   width: 100%;
-  max-width: 30rem;
+  max-width: 34rem;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .78rem;
+  gap: 1rem;
+}
+.fd-checkin-hero {
+  width: 100%;
+  max-width: 30rem;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(98, 230, 217, 0.28);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(84, 191, 250, 0.16), transparent 35%),
+    linear-gradient(160deg, rgba(15, 33, 66, 0.95), rgba(8, 21, 43, 0.94));
+  box-shadow:
+    0 16px 34px rgba(4, 9, 21, 0.54),
+    inset 0 1px 0 rgba(143, 239, 255, 0.12);
 }
 .fd-checkin-brand-header {
   width: 100%;
@@ -29,16 +45,6 @@ body {
   display: grid;
   gap: .44rem;
   justify-items: center;
-  padding-top: 0;
-}
-.fd-checkin-logo-wrap {
-  width: 100%;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  margin-bottom: .14rem;
 }
 .fd-checkin-tagline {
   margin: 0;
@@ -47,61 +53,60 @@ body {
   color: #b9ffe9;
   font-weight: 700;
   line-height: 1.3;
-  text-shadow: 0 0 14px rgba(109, 255, 217, 0.24), 0 0 26px rgba(83, 172, 255, 0.18);
 }
-.fd-checkin-brand-header h1 {
-  margin: 0;
-  letter-spacing: .045em;
-  text-transform: uppercase;
-  font-weight: 900;
-  font-size: clamp(1.55rem, 6.8vw, 2.15rem);
-  color: #eff6ff;
+.fd-checkin-logo-wrap {
+  width: auto;
 }
 .fd-checkin-card {
   width: 100%;
-  border: 1px solid rgba(107, 228, 236, 0.32);
-  border-radius: 18px;
-  background: linear-gradient(165deg, rgba(15, 34, 64, 0.94), rgba(10, 19, 37, 0.97));
-  padding: .94rem;
-  box-shadow: 0 18px 36px rgba(4, 7, 16, 0.5);
+  border: 1px solid rgba(111, 231, 235, 0.34);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(72, 194, 177, 0.12), transparent 40%),
+    linear-gradient(165deg, rgba(16, 34, 64, 0.96), rgba(8, 18, 38, 0.98));
+  padding: 1.05rem;
+  box-shadow:
+    0 20px 40px rgba(4, 9, 22, 0.58),
+    inset 0 1px 0 rgba(173, 241, 255, 0.08);
 }
 .fd-checkin-form, .fd-checkin-success { display: grid; gap: .78rem; }
 .fd-checkin-event-intro {
   display: grid;
-  gap: .56rem;
-  margin: .18rem 0 .24rem;
-  max-width: 30ch;
+  gap: .5rem;
+  margin: .1rem 0 .35rem;
+  max-width: 35ch;
 }
 .fd-checkin-event-kicker {
   margin: 0;
-  color: #bbffea;
-  font-size: .9rem;
-  letter-spacing: .055em;
-  font-weight: 700;
+  color: #aefee6;
+  font-size: .78rem;
+  letter-spacing: .1em;
+  font-weight: 800;
   line-height: 1.3;
-  text-transform: none;
+  text-transform: uppercase;
 }
 .fd-checkin-event-intro h2 {
   margin: 0;
   text-transform: none;
-  letter-spacing: .02em;
-  font-size: 1.56rem;
-  font-weight: 950;
-  line-height: 1.02;
-  color: #e8f6ff;
-  text-shadow: 0 0 10px rgba(126, 255, 220, 0.2), 0 0 18px rgba(70, 172, 255, 0.2);
+  letter-spacing: .015em;
+  font-size: clamp(1.72rem, 6.5vw, 2.12rem);
+  font-weight: 900;
+  line-height: 1;
+  color: #eef8ff;
+  text-shadow: 0 0 16px rgba(115, 251, 223, 0.2), 0 0 26px rgba(70, 172, 255, 0.22);
 }
 .fd-checkin-event-intro p {
   margin: 0;
-  color: #d4e8f8;
-  line-height: 1.4;
+  color: #c6dcf2;
+  line-height: 1.45;
   font-size: .9rem;
 }
 .fd-checkin-event-block {
-  border: 1px solid rgba(117, 229, 202, 0.28);
-  border-radius: 14px;
-  background: rgba(6, 27, 37, .42);
-  padding: .75rem;
+  border: 1px solid rgba(117, 229, 202, 0.3);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(7, 30, 45, 0.52), rgba(5, 18, 30, 0.62));
+  padding: .82rem;
+  box-shadow: inset 0 1px 0 rgba(168, 246, 236, 0.08);
 }
 .fd-checkin-event-label {
   margin: 0;
@@ -132,7 +137,7 @@ body {
   gap: .5rem;
   align-items: center;
   justify-content: space-between;
-  margin-top: .28rem;
+  margin-top: .38rem;
 }
 .fd-checkin-event-meta .fd-checkin-event-time {
   margin: 0;
@@ -160,6 +165,53 @@ body {
   display: grid;
   gap: .45rem;
 }
+.fd-event-option-list {
+  display: grid;
+  gap: .62rem;
+  margin-top: .15rem;
+}
+.fd-event-option-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(102, 215, 241, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(8, 23, 45, 0.62), rgba(7, 18, 34, 0.72));
+  color: #ecf7ff;
+  padding: .74rem .8rem;
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.fd-event-option-card:hover {
+  border-color: rgba(131, 247, 221, 0.54);
+  transform: translateY(-1px);
+}
+.fd-event-option-card.is-selected {
+  border-color: rgba(142, 255, 221, 0.72);
+  box-shadow: 0 0 0 1px rgba(102, 245, 220, 0.42), 0 14px 24px rgba(3, 10, 26, 0.34);
+  background: linear-gradient(165deg, rgba(11, 36, 65, 0.75), rgba(7, 24, 42, 0.84));
+}
+.fd-event-option-card:focus-visible {
+  outline: 2px solid rgba(121, 255, 229, 0.8);
+  outline-offset: 2px;
+}
+.fd-event-option-head {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  align-items: flex-start;
+}
+.fd-event-option-head p {
+  margin: 0;
+  font-weight: 750;
+  line-height: 1.25;
+}
+.fd-event-option-venue,
+.fd-event-option-time {
+  margin: .28rem 0 0;
+  font-size: .84rem;
+}
+.fd-event-option-venue { color: #afeaff; }
+.fd-event-option-time { color: #d3e5fa; }
 .fd-checkin-form label {
   display: block;
   font-size: .76rem;
@@ -293,7 +345,7 @@ body {
 }
 .fd-logo {
   width: 100%;
-  max-width: 16rem;
+  max-width: 10.5rem;
   padding: 0;
   text-align: center;
   background: transparent;
@@ -304,13 +356,12 @@ body {
 .fd-logo img {
   width: 100%;
   height: auto;
-  max-width: 10.5rem;
+  max-width: 7.1rem;
 }
 @media (min-width: 430px) {
-  .fd-checkin-page { padding-top: .34rem; }
-  .fd-checkin-shell { gap: .6rem; }
-  .fd-checkin-brand-header { gap: .28rem; }
-  .fd-logo img { max-width: 9.6rem; }
+  .fd-checkin-page { padding-top: .6rem; }
+  .fd-checkin-shell { gap: .95rem; }
+  .fd-logo img { max-width: 7.7rem; }
   .fd-checkin-event-intro { max-width: 34ch; }
 }
 

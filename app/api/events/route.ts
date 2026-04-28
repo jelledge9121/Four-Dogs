@@ -5,7 +5,6 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 
 import { SupabaseRequestError, getEventByIdFromDatabase, getEventsFromDatabase, supabaseRpc } from '../../../lib/utils';
-import { deriveEventStatus } from '../../../lib/event-status';
 
 function sortEventsByLiveThenStart<T extends { status?: string | null; starts_at?: string | null; event_date?: string | null }>(
   events: T[],
@@ -42,9 +41,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ event });
     }
 
-    const events = await getEventsFromDatabase();
-    const filteredEvents = events.filter((event) => deriveEventStatus(event) !== 'closed');
-    const sortedEvents = sortEventsByLiveThenStart(filteredEvents);
+    const events = await getEventsFromDatabase(['live', 'upcoming']);
+    const sortedEvents = sortEventsByLiveThenStart(events);
 
     return NextResponse.json(
       { events: sortedEvents },

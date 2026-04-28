@@ -12,7 +12,7 @@ type EventRow = {
   ends_at?: string | null;
   status?: 'live' | 'upcoming' | 'closed' | string | null;
   venue_id?: string | null;
-  venue_name?: string | null;
+  venue_name: string;
 };
 
 type EventsResponse = {
@@ -93,7 +93,10 @@ export default function CheckInForm() {
         if (!response.ok) throw new Error();
 
         const payload = (await response.json()) as EventsResponse;
-        const loadedEvents = payload.events ?? [];
+        const loadedEvents = (payload.events ?? []).map((event) => ({
+          ...event,
+          venue_name: event.venue_name ?? '',
+        }));
         const eventId = selectDefaultEvent(loadedEvents);
 
         if (!isMounted) return;
@@ -343,22 +346,31 @@ export default function CheckInForm() {
       </section>
 
       {events.length > 1 ? (
-        <div className="fd-form-group">
-          <label htmlFor="event-id">Choose Event</label>
-          <select
-            id="event-id"
-            value={selectedEventId}
-            onChange={(event) => setSelectedEventId(event.target.value)}
-            className="fd-checkin-input"
-            required
-          >
-            {events.map((event) => (
-              <option key={event.id} value={event.id}>
-                {event.title ?? 'Untitled Event'} · {event.venue_name ?? 'Venue TBD'}
-              </option>
-            ))}
-          </select>
-        </div>
+        <section className="fd-event-option-list" aria-label="Available events">
+          {events.map((eventItem) => {
+            const isSelected = eventItem.id === selectedEventId;
+            const statusClass = eventItem.status === 'live' ? 'is-live' : 'is-upcoming';
+
+            return (
+              <button
+                key={eventItem.id}
+                type="button"
+                onClick={() => setSelectedEventId(eventItem.id)}
+                className={`fd-event-option-card ${isSelected ? 'is-selected' : ''}`}
+                aria-pressed={isSelected}
+              >
+                <div className="fd-event-option-head">
+                  <p>{eventItem.title ?? 'Untitled Event'}</p>
+                  <span className={`fd-event-status-badge ${statusClass}`}>
+                    {eventItem.status === 'live' ? 'LIVE' : 'UPCOMING'}
+                  </span>
+                </div>
+                <p className="fd-event-option-venue">{eventItem.venue_name ?? 'Venue to be announced'}</p>
+                <p className="fd-event-option-time">{formatEventSchedule(eventItem)}</p>
+              </button>
+            );
+          })}
+        </section>
       ) : null}
 
       <div className="fd-form-group">
