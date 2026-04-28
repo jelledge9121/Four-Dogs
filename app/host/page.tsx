@@ -24,11 +24,17 @@ type PendingRedemption = {
   customer_note?: string | null;
   created_at: string;
 };
+type Analytics = {
+  total_checkins: number; unique_guests: number; new_guests: number; returning_guests: number;
+  repeat_rate: number; avg_checkins_per_event: number; pending_reward_redemptions: number;
+  venue_proof: { checkins: number; events: number; returning_percent: number; avg_attendance_per_event: number; top_venue_name: string };
+};
 
 export default function HostPage() {
   const [pending, setPending] = useState<PendingRedemption[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
   const [selectedEventId, setSelectedEventId] = useState('');
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
 
   return (
     <main className="fd-host-page">
@@ -51,6 +57,7 @@ export default function HostPage() {
               eventId={selectedEventId}
               onChanged={() => setRefreshTick((value) => value + 1)}
             />
+            <VenueAnalyticsPanel analytics={analytics} />
 
             <section className="fd-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
               {pending.slice(0, 6).map((reward) => (
@@ -72,11 +79,34 @@ export default function HostPage() {
               onEventResolved={setSelectedEventId}
               onLoaded={(rows) => setPending(rows)}
             />
+            <AnalyticsLoader onLoaded={setAnalytics} refreshTick={refreshTick} />
           </div>
         )}
       </HostAuthGate>
     </main>
   );
+}
+
+function VenueAnalyticsPanel({ analytics }: { analytics: Analytics | null }) {
+  if (!analytics) return null;
+  return <section className="fd-grid fd-grid-2">
+    <TeamCard title="Total Check-Ins" subtitle="Across all events" points={analytics.total_checkins} />
+    <TeamCard title="Unique Guests" subtitle={`New ${analytics.new_guests} · Returning ${analytics.returning_guests}`} points={analytics.unique_guests} />
+    <TeamCard title="Repeat Attendance" subtitle="Returning / unique attendees" points={Math.round(analytics.repeat_rate * 100)} />
+    <TeamCard title="Avg/Event" subtitle="Average check-ins per event" points={Math.round(analytics.avg_checkins_per_event * 10) / 10} />
+    <TeamCard title="Pending Rewards" subtitle="Awaiting host action" points={analytics.pending_reward_redemptions} />
+    <TeamCard title="Top Venue" subtitle={analytics.venue_proof.top_venue_name} points={analytics.venue_proof.returning_percent} />
+  </section>;
+}
+
+function AnalyticsLoader({ onLoaded, refreshTick }: { onLoaded: (value: Analytics) => void; refreshTick: number }) {
+  useEffect(() => {
+    fetch('/api/host/analytics', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((payload) => onLoaded(payload as Analytics))
+      .catch(() => undefined);
+  }, [refreshTick, onLoaded]);
+  return null;
 }
 
 function HostRedemptionLoader({
