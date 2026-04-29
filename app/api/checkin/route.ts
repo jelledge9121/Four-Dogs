@@ -133,13 +133,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
     }
 
-    const { isAdmin } = await getCustomerAdminByPhone(body.phone ?? '');
+    const { customerId, isAdmin } = await getCustomerAdminByPhone(body.phone ?? '');
     const eventStatus = (dbEvent.status ?? '').toLowerCase();
     if (!isAdmin && eventStatus !== 'live') {
       return NextResponse.json(
         { error: 'Check-in is only available while this event is live.' },
         { status: 403 },
       );
+    }
+
+    if (customerId) {
+      const existingCheckins = await supabaseSelect<{ id: string }>(
+        'check_ins',
+        new URLSearchParams({
+          select: 'id',
+          event_id: `eq.${eventId}`,
+          customer_id: `eq.${customerId}`,
+          limit: '1',
+        }),
+      );
+
+      if (existingCheckins.length > 0) {
+        return NextResponse.json({ error: 'This customer is already checked in for this event.' }, { status: 409 });
+      }
     }
 
     try {
