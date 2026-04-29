@@ -39,7 +39,7 @@ type CustomerAdminRow = {
 };
 
 async function getCustomerAdminByPhone(inputPhone: string): Promise<{ customerId: string | null; isAdmin: boolean }> {
-  const normalizedInput = inputPhone.replace(/\D/g, '');
+  const normalizedInput = normalizePhone(inputPhone);
   if (!normalizedInput) return { customerId: null, isAdmin: false };
 
   const rows = await supabaseSelect<CustomerAdminRow>(
