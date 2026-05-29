@@ -12,13 +12,18 @@ import PlayerSearch from '../../components/PlayerSearch';
 import QRCodeDisplay from '../../components/QRCodeDisplay';
 import TeamCard from '../../components/TeamCard';
 
+const SHOW_HOST_BETA = process.env.NEXT_PUBLIC_SHOW_HOST_BETA === 'true';
+
 type EventRow = { id: string; status?: string };
 
 type PendingRedemption = {
   id: string;
   customer_id: string;
+  customer_display_name?: string | null;
   event_id: string;
   reward_id: string;
+  reward_slug?: string | null;
+  reward_title?: string | null;
   points_cost: number;
   host_note?: string | null;
   customer_note?: string | null;
@@ -43,12 +48,14 @@ export default function HostPage() {
           <div className="fd-host-wrap">
             <OfflineIndicator />
             <EventHeader title="Host Dashboard" subtitle="Live moderation and reward controls" />
-            <EventStatusControl hostKey={auth.hostKey} hostName={auth.hostName} />
+            {SHOW_HOST_BETA ? <EventStatusControl hostKey={auth.hostKey} hostName={auth.hostName} /> : null}
 
-            <div className="fd-grid fd-grid-2">
-              <QRCodeDisplay />
-              <PlayerSearch />
-            </div>
+            {SHOW_HOST_BETA ? (
+              <div className="fd-grid fd-grid-2">
+                <QRCodeDisplay />
+                <PlayerSearch />
+              </div>
+            ) : null}
 
             <PendingRewards
               hostKey={auth.hostKey}
@@ -63,14 +70,14 @@ export default function HostPage() {
               {pending.slice(0, 6).map((reward) => (
                 <TeamCard
                   key={reward.id}
-                  title={reward.reward_id}
-                  subtitle={`Customer: ${reward.customer_id.slice(0, 8)}…`}
+                  title={reward.reward_title || reward.reward_id}
+                  subtitle={`${reward.customer_display_name || 'Rewards Member'} · ${reward.customer_id.slice(0, 8)}…`}
                   points={reward.points_cost}
                 />
               ))}
             </section>
 
-            <AddTeamModal />
+            {SHOW_HOST_BETA ? <AddTeamModal /> : null}
 
             <HostRedemptionLoader
               hostKey={auth.hostKey}
@@ -79,7 +86,7 @@ export default function HostPage() {
               onEventResolved={setSelectedEventId}
               onLoaded={(rows) => setPending(rows)}
             />
-            <AnalyticsLoader onLoaded={setAnalytics} refreshTick={refreshTick} />
+            <AnalyticsLoader hostKey={auth.hostKey} onLoaded={setAnalytics} refreshTick={refreshTick} />
           </div>
         )}
       </HostAuthGate>
@@ -99,13 +106,16 @@ function VenueAnalyticsPanel({ analytics }: { analytics: Analytics | null }) {
   </section>;
 }
 
-function AnalyticsLoader({ onLoaded, refreshTick }: { onLoaded: (value: Analytics) => void; refreshTick: number }) {
+function AnalyticsLoader({ hostKey, onLoaded, refreshTick }: { hostKey: string; onLoaded: (value: Analytics) => void; refreshTick: number }) {
   useEffect(() => {
-    fetch('/api/host/analytics', { cache: 'no-store' })
-      .then((response) => response.json())
+    fetch('/api/host/analytics', { headers: { 'x-host-key': hostKey }, cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load host analytics.');
+        return response.json();
+      })
       .then((payload) => onLoaded(payload as Analytics))
       .catch(() => undefined);
-  }, [refreshTick, onLoaded]);
+  }, [hostKey, refreshTick, onLoaded]);
   return null;
 }
 

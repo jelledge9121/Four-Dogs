@@ -10,13 +10,13 @@ export type RewardDefinition = {
 export const REWARDS: RewardDefinition[] = [
   {
     id: 'bonus-card-or-trivia-2',
-    cost: 5,
+    cost: 10,
     title: '1 Extra Bingo Card or +2 Trivia Points',
     description: 'Choose one: one extra music bingo card OR +2 trivia points.',
   },
   {
     id: 'double-bonus-card-or-trivia-4',
-    cost: 10,
+    cost: 20,
     title: '2 Extra Bingo Cards or +4 Trivia Points',
     description: 'Choose one: two extra music bingo cards OR +4 trivia points.',
   },

@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-
-import { normalizePhone } from '../lib/phone';
+import { useEffect, useState } from 'react';
 
 type RewardCatalogItem = {
   id: string;
@@ -25,30 +23,24 @@ type CustomerRewards = {
 type RedeemStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export default function RewardsLookup() {
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rewards, setRewards] = useState<CustomerRewards | null>(null);
   const [redeemStatus, setRedeemStatus] = useState<Record<string, RedeemStatus>>({});
   const [redeemMessage, setRedeemMessage] = useState<Record<string, string>>({});
 
-  async function handleLookup() {
-    const normalized = normalizePhone(phone);
-    if (!normalized) {
-      setError('Please enter a valid phone number.');
-      return;
-    }
 
+  async function handleLookup() {
     setLoading(true);
     setError('');
     setRewards(null);
 
     try {
-      const res = await fetch(`/api/customer-rewards?phone=${encodeURIComponent(normalized)}`, { cache: 'no-store' });
+      const res = await fetch('/api/customer-rewards', { cache: 'no-store' });
       const data = (await res.json()) as CustomerRewards & { error?: string };
 
       if (!res.ok || !data.ok) {
-        setError(data.error || 'Could not find an account with that number.');
+        setError(data.error || 'Please check in first to access your rewards.');
         return;
       }
 
@@ -60,6 +52,11 @@ export default function RewardsLookup() {
     }
   }
 
+
+  useEffect(() => {
+    handleLookup();
+  }, []);
+
   async function handleRedeem(item: RewardCatalogItem) {
     if (!rewards) return;
 
@@ -67,14 +64,12 @@ export default function RewardsLookup() {
     setRedeemMessage((prev) => ({ ...prev, [item.id]: '' }));
 
     try {
-      const normalizedPhone = normalizePhone(phone);
       const res = await fetch('/api/rewards/redeem', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           customer_id: rewards.customer_id,
           reward_catalog_id: item.id,
-          phone: normalizedPhone,
         }),
       });
 
@@ -92,7 +87,7 @@ export default function RewardsLookup() {
         [item.id]: 'Request submitted! Show this to your host to redeem.',
       }));
 
-      const updated = await fetch(`/api/customer-rewards?phone=${encodeURIComponent(normalizedPhone)}`, { cache: 'no-store' });
+      const updated = await fetch('/api/customer-rewards', { cache: 'no-store' });
       const updatedData = (await updated.json()) as CustomerRewards;
       if (updated.ok && updatedData.ok) setRewards(updatedData);
     } catch {
@@ -206,7 +201,6 @@ export default function RewardsLookup() {
         <button
           onClick={() => {
             setRewards(null);
-            setPhone('');
             setRedeemStatus({});
             setRedeemMessage({});
           }}
@@ -224,29 +218,16 @@ export default function RewardsLookup() {
       <section className="fd-checkin-event-block">
         <p className="fd-checkin-event-label">Check Your Rewards</p>
         <h2>See Your Points &amp; Redeem</h2>
-        <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0.5rem 0 0' }}>Enter the phone number you use to check in.</p>
+        <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0.5rem 0 0' }}>Rewards are available only for an active check-in session.</p>
       </section>
-
-      <div className="fd-form-group">
-        <label htmlFor="rewards-phone">Your Phone Number</label>
-        <input
-          id="rewards-phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-          placeholder="(555) 555-5555"
-          className="fd-checkin-input"
-        />
-      </div>
 
       {error && <p className="fd-checkin-error">{error}</p>}
 
-      <button onClick={handleLookup} disabled={loading || !phone.trim()} className="fd-checkin-button">
-        {loading ? 'Looking Up...' : 'View My Rewards'}
+      <button onClick={handleLookup} disabled={loading} className="fd-checkin-button">
+        {loading ? 'Loading...' : 'Refresh My Rewards'}
       </button>
 
-      <p className="fd-trust-copy">No spam. Just rewards.</p>
+      <p className="fd-trust-copy">Check in first, then return here to redeem.</p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { createCustomerSessionToken } from '../../../lib/customer-session';
 import { checkRateLimit } from '../../../lib/rate-limit';
 import { buildRewardSnapshot } from '../../../lib/rewards';
+import { isEventLive } from '../../../lib/event-status';
 import { normalizePhone } from '../../../lib/phone';
 import { SupabaseRequestError, getEventByIdFromDatabase, supabaseRpc, supabaseSelect } from '../../../lib/utils';
 
@@ -134,8 +135,8 @@ export async function POST(request: Request) {
     }
 
     const { customerId, isAdmin } = await getCustomerAdminByPhone(body.phone ?? '');
-    const eventStatus = (dbEvent.status ?? '').toLowerCase();
-    if (!isAdmin && eventStatus !== 'live') {
+    const liveNow = isEventLive(dbEvent);
+    if (!isAdmin && !liveNow) {
       return NextResponse.json(
         { error: 'Check-in is only available while this event is live.' },
         { status: 403 },
@@ -160,7 +161,6 @@ export async function POST(request: Request) {
 
     try {
       const result = await runCheckinRpc({ eventId, phone, name, email, referralCode });
-      console.log('[checkin RPC result]', result);
 
       if (!result?.ok) {
         return NextResponse.json({ error: 'Unable to process check-in.' }, { status: 409 });

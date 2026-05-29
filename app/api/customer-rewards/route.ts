@@ -8,7 +8,6 @@ import {
   getCustomerSessionTokenFromRequest,
   verifyCustomerSessionToken,
 } from '../../../lib/customer-session';
-import { normalizePhone } from '../../../lib/phone';
 import { REWARDS } from '../../../lib/rewards';
 import { getEventByIdFromDatabase, supabaseRpc, supabaseSelect } from '../../../lib/utils';
 
@@ -50,22 +49,6 @@ function splitRewards(points: number) {
   };
 }
 
-async function resolveCustomerFromPhone(phoneRaw: string): Promise<CustomerRow | null> {
-  const normalized = normalizePhone(phoneRaw);
-  if (!normalized) return null;
-
-  const rows = await supabaseSelect<CustomerRow>(
-    'customers',
-    new URLSearchParams({
-      select: 'id,display_name',
-      phone_normalized: `eq.${normalized}`,
-      limit: '1',
-    }),
-  );
-
-  return rows[0] ?? null;
-}
-
 async function resolveVenueName(customerId: string): Promise<string> {
   const latestCheckin = await supabaseSelect<LatestCheckInRow>(
     'check_ins',
@@ -85,41 +68,24 @@ async function resolveVenueName(customerId: string): Promise<string> {
 }
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const phoneParam = url.searchParams.get('phone')?.trim() ?? '';
-
-  let customerId = '';
-  let fullName = 'Rewards Member';
-
-  if (phoneParam) {
-    const customer = await resolveCustomerFromPhone(phoneParam);
-    if (!customer?.id) {
-      return NextResponse.json({ ok: false, error: 'Could not find an account with that number.' }, { status: 404 });
-    }
-
-    customerId = customer.id;
-    fullName = customer.display_name?.trim() || 'Rewards Member';
-  } else {
-    const token = getCustomerSessionTokenFromRequest(request);
-    if (!token) {
-      return NextResponse.json({ ok: false, error: 'Missing phone number or customer session token.' }, { status: 401 });
-    }
-
-    const session = await verifyCustomerSessionToken(token);
-    if (!session) {
-      return NextResponse.json({ ok: false, error: 'Invalid or expired customer session token.' }, { status: 401 });
-    }
-
-    customerId = session.customer_id;
-
-    const rows = await supabaseSelect<CustomerRow>(
-      'customers',
-      new URLSearchParams({ select: 'id,display_name', id: `eq.${customerId}`, limit: '1' }),
-    );
-    fullName = rows[0]?.display_name?.trim() || 'Rewards Member';
+  const token = getCustomerSessionTokenFromRequest(request);
+  if (!token) {
+    return NextResponse.json({ ok: false, error: 'Customer session is required. Please check in first.' }, { status: 401 });
   }
 
-  const summary = await supabaseRpc<RewardSummary>('customer_rewards_summary', {
+  const session = await verifyCustomerSessionToken(token);
+  if (!session) {
+    return NextResponse.json({ ok: false, error: 'Invalid or expired customer session token.' }, { status: 401 });
+  }
+
+  const customerId = session.customer_id;
+  const rows = await supabaseSelect<CustomerRow>(
+    'customers',
+    new URLSearchParams({ select: 'id,display_name', id: `eq.${customerId}`, limit: '1' }),
+  );
+  const fullName = rows[0]?.display_name?.trim() || 'Rewards Member';
+
+  const summary = await supabaseRpc<RewardSummary>('get_customer_reward_summary', {
     p_customer_id: customerId,
   });
 

@@ -3,13 +3,17 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
+import { assertHostRequest } from '../../../../lib/host-auth';
 import { supabaseSelect } from '../../../../lib/utils';
 
 type CheckInRow = { customer_id: string; event_id: string; created_at: string };
 type EventRow = { id: string; title?: string | null; event_date?: string | null; starts_at?: string | null; venues?: { name?: string | null } | null };
 type RewardRedemptionRow = { id: string; status: string; reward_id: string; created_at: string; points_cost: number; event_id?: string | null };
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = assertHostRequest(request);
+  if (authError) return authError;
+
   const [checkins, events, redemptions] = await Promise.all([
     supabaseSelect<CheckInRow>('check_ins', new URLSearchParams({ select: 'customer_id,event_id,created_at', order: 'created_at.desc', limit: '2500' })),
     supabaseSelect<EventRow>('events', new URLSearchParams({ select: 'id,title,event_date,starts_at,venues(name)', order: 'starts_at.desc.nullslast,event_date.desc' })),
