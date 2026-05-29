@@ -5,19 +5,31 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 
 import { assertHostRequest } from '../../../../lib/host-auth';
+import { REWARDS } from '../../../../lib/rewards';
 import { supabaseSelect } from '../../../../lib/utils';
 
 type PendingRedemptionRow = {
   id: string;
   customer_id: string;
   event_id: string;
-  reward_id: string;
+  reward_id?: string | null;
   points_cost: number;
   status: 'pending' | 'approved' | 'rejected';
   host_note?: string | null;
   customer_note?: string | null;
   created_at: string;
+  customers?: { display_name?: string | null } | Array<{ display_name?: string | null }> | null;
 };
+
+function getJoinedCustomerName(row: PendingRedemptionRow): string {
+  const joined = row.customers;
+  const customer = Array.isArray(joined) ? joined[0] : joined;
+  return customer?.display_name?.trim() || 'Rewards Member';
+}
+
+function getRewardTitle(slug: string): string {
+  return REWARDS.find((reward) => reward.id === slug)?.title ?? slug;
+}
 
 export async function GET(request: Request) {
   const authError = assertHostRequest(request);
@@ -37,12 +49,31 @@ export async function GET(request: Request) {
   const rows = await supabaseSelect<PendingRedemptionRow>(
     'reward_redemptions',
     new URLSearchParams({
-      select: 'id,customer_id,event_id,reward_id,points_cost,status,host_note,customer_note,created_at',
+      select: 'id,customer_id,event_id,reward_id,points_cost,status,host_note,customer_note,created_at,customers(display_name)',
       status: 'eq.pending',
       event_id: `eq.${scopedEventId}`,
       order: 'created_at.asc',
     }),
   );
 
-  return NextResponse.json({ pending: rows, scoped_event_id: scopedEventId });
+  return NextResponse.json({
+    pending: rows.map((row) => {
+      const rewardSlug = row.reward_id?.trim() || 'unknown-reward';
+      return {
+        id: row.id,
+        customer_id: row.customer_id,
+        customer_display_name: getJoinedCustomerName(row),
+        event_id: row.event_id,
+        reward_id: rewardSlug,
+        reward_slug: rewardSlug,
+        reward_title: getRewardTitle(rewardSlug),
+        points_cost: row.points_cost,
+        status: row.status,
+        host_note: row.host_note ?? null,
+        customer_note: row.customer_note ?? null,
+        created_at: row.created_at,
+      };
+    }),
+    scoped_event_id: scopedEventId,
+  });
 }

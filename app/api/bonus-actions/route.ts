@@ -1,53 +1,60 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse } from 'next/server';
+
 import { getCustomerSessionTokenFromRequest, verifyCustomerSessionToken } from '../../../lib/customer-session';
-import { SupabaseRequestError, supabaseInsert, supabaseSelect } from '../../../lib/utils';
+import { supabaseRpc } from '../../../lib/utils';
 
 type Body = { action?: 'facebook_follow' | 'event_share'; event_id?: string };
-type LedgerRow = { id: string };
+type BonusActionResult = {
+  ok?: boolean;
+  awarded?: boolean;
+  points?: number;
+  message?: string;
+  error?: string;
+};
 
-const BONUS_ENTRY_TYPE = 'bonus';
+const VALID_ACTIONS = new Set(['facebook_follow', 'event_share']);
 
 export async function POST(request: Request) {
   const token = getCustomerSessionTokenFromRequest(request);
   if (!token) return NextResponse.json({ ok: false, error: 'Missing session.' }, { status: 401 });
+
   const session = await verifyCustomerSessionToken(token);
   if (!session) return NextResponse.json({ ok: false, error: 'Invalid session.' }, { status: 401 });
 
-  const body = (await request.json()) as Body;
-  const action = body.action;
-  if (!action) return NextResponse.json({ ok: false, error: 'Missing action.' }, { status: 400 });
-
-  const eventId = action === 'event_share' ? (body.event_id || session.event_id || null) : null;
-  const description = action === 'facebook_follow' ? 'bonus_facebook_follow' : 'bonus_event_share';
-
-  const filters = new URLSearchParams({
-    select: 'id',
-    customer_id: `eq.${session.customer_id}`,
-    description: `eq.${description}`,
-    limit: '1',
-  });
-  if (action === 'event_share' && eventId) filters.set('event_id', `eq.${eventId}`);
-
-  const existing = await supabaseSelect<LedgerRow>('points_ledger', filters);
-  if (existing.length > 0) return NextResponse.json({ ok: true, awarded: false, message: 'Already claimed.' });
-
+  let body: Body;
   try {
-    await supabaseInsert('points_ledger', {
-      customer_id: session.customer_id,
-      venue_id: null,
-      event_id: eventId,
-      entry_type: BONUS_ENTRY_TYPE,
-      points: action === 'facebook_follow' ? 1 : 2,
-      reference_id: null,
-      description,
-    });
-  } catch (error) {
-    if (error instanceof SupabaseRequestError && error.code === '23505') {
-      return NextResponse.json({ ok: true, awarded: false, message: 'Already claimed.' });
-    }
-    throw error;
+    body = (await request.json()) as Body;
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true, awarded: true });
+  const action = body.action;
+  if (!action || !VALID_ACTIONS.has(action)) {
+    return NextResponse.json({ ok: false, error: 'Unknown bonus action.' }, { status: 400 });
+  }
+
+  const eventId = body.event_id?.trim() || session.event_id || null;
+  const result = await supabaseRpc<BonusActionResult>('award_bonus_action', {
+    p_customer_id: session.customer_id,
+    p_action: action,
+    p_event_id: eventId,
+  });
+
+  if (!result?.ok) {
+    return NextResponse.json(
+      { ok: false, awarded: false, error: result?.error || result?.message || 'Unable to award bonus action.' },
+      { status: 409 },
+    );
+  }
+
+  return NextResponse.json({
+    ok: true,
+    awarded: Boolean(result.awarded),
+    points: result.points ?? 0,
+    message: result.message ?? (result.awarded ? 'Bonus points added.' : 'Already claimed.'),
+  });
 }
