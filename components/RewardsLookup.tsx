@@ -22,13 +22,23 @@ type CustomerRewards = {
 
 type RedeemStatus = 'idle' | 'loading' | 'success' | 'error';
 
+// Pick a badge emoji from the reward name/description (no schema change needed).
+function rewardEmoji(item: RewardCatalogItem): string {
+  const text = `${item.name} ${item.description}`.toLowerCase();
+  if (/trivia|quiz|question/.test(text)) return '🎯';
+  if (/bingo|card/.test(text)) return '🎱';
+  if (/beer|drink|cocktail|soda|draft|pint/.test(text)) return '🍺';
+  if (/app|nacho|wing|fries|food|plate|snack|chip/.test(text)) return '🍤';
+  if (/shirt|tee|gear|merch|hat|hoodie|swag|sticker/.test(text)) return '👕';
+  return '🏆';
+}
+
 export default function RewardsLookup() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rewards, setRewards] = useState<CustomerRewards | null>(null);
   const [redeemStatus, setRedeemStatus] = useState<Record<string, RedeemStatus>>({});
   const [redeemMessage, setRedeemMessage] = useState<Record<string, string>>({});
-
 
   async function handleLookup() {
     setLoading(true);
@@ -40,18 +50,17 @@ export default function RewardsLookup() {
       const data = (await res.json()) as CustomerRewards & { error?: string };
 
       if (!res.ok || !data.ok) {
-        setError(data.error || 'Please check in first to access your rewards.');
+        setError(data.error || 'No active check-in found.');
         return;
       }
 
       setRewards(data);
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError('Could not reach the server. Please try again.');
     } finally {
       setLoading(false);
     }
   }
-
 
   useEffect(() => {
     handleLookup();
@@ -96,16 +105,17 @@ export default function RewardsLookup() {
     }
   }
 
+  // ----- Active session: balance + rewards -----
   if (rewards) {
     return (
       <div className="fd-checkin-form">
-        <div className="fd-checkin-event-block" style={{ marginBottom: '1.5rem' }}>
+        <div className="fd-checkin-event-block">
           <p className="fd-checkin-event-label">Your Rewards Balance</p>
           <h2 style={{ margin: '0.25rem 0' }}>{rewards.full_name}</h2>
           <p className="fd-checkin-event-venue">{rewards.venue_name}</p>
         </div>
 
-        <div className="fd-success-stats" style={{ marginBottom: '1.5rem' }}>
+        <div className="fd-success-stats">
           <div className="fd-success-stat">
             <p>Points</p>
             <strong>{rewards.points_balance}</strong>
@@ -117,81 +127,63 @@ export default function RewardsLookup() {
         </div>
 
         {rewards.available.length > 0 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p className="fd-success-label" style={{ marginBottom: '0.75rem' }}>
-              🎉 Available to Redeem
-            </p>
-            {rewards.available.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  background: 'rgba(0,200,200,0.08)',
-                  border: '1px solid #00c8c8',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ color: '#fff' }}>{item.name}</strong>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#aaa' }}>{item.description}</p>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#00c8c8' }}>{item.points_cost} points</p>
-                  </div>
-                  <button
-                    onClick={() => handleRedeem(item)}
-                    disabled={redeemStatus[item.id] === 'loading' || redeemStatus[item.id] === 'success'}
-                    className="fd-checkin-button"
-                    style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.85rem', minWidth: '80px' }}
-                  >
-                    {redeemStatus[item.id] === 'loading'
-                      ? '...'
-                      : redeemStatus[item.id] === 'success'
-                        ? '✓ Done'
-                        : 'Redeem'}
-                  </button>
-                </div>
-                {redeemMessage[item.id] ? (
-                  <p
-                    style={{
-                      marginTop: '0.5rem',
-                      fontSize: '0.85rem',
-                      color: redeemStatus[item.id] === 'success' ? '#00c8c8' : '#ff6b6b',
-                    }}
-                  >
-                    {redeemMessage[item.id]}
-                  </p>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <section className="fd-reward-section">
+            <p className="fd-success-label">🎉 Available to Redeem</p>
+            <ul className="fd-reward-list">
+              {rewards.available.map((item) => {
+                const state = redeemStatus[item.id];
+                return (
+                  <li key={item.id} className="fd-reward-card is-available">
+                    <div className="fd-reward-row">
+                      <span className="fd-reward-icon" aria-hidden="true">{rewardEmoji(item)}</span>
+                      <div className="fd-reward-body">
+                        <p className="fd-reward-name">{item.name}</p>
+                        {item.description ? <p className="fd-reward-desc">{item.description}</p> : null}
+                        <p className="fd-reward-cost">{item.points_cost} pts</p>
+                      </div>
+                      <div className="fd-reward-redeem">
+                        <button
+                          type="button"
+                          onClick={() => handleRedeem(item)}
+                          disabled={state === 'loading' || state === 'success'}
+                          className={`fd-redeem-button ${state === 'success' ? 'is-done' : ''}`}
+                        >
+                          {state === 'loading' ? '…' : state === 'success' ? '✓ Done' : 'Redeem'}
+                        </button>
+                      </div>
+                    </div>
+                    {redeemMessage[item.id] ? (
+                      <p className={`fd-reward-msg ${state === 'success' ? 'is-success' : 'is-error'}`}>
+                        {redeemMessage[item.id]}
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         )}
 
         {rewards.locked.length > 0 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p className="fd-success-label" style={{ marginBottom: '0.75rem', color: '#666' }}>
-              🔒 Keep Earning
-            </p>
-            {rewards.locked.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid #333',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  marginBottom: '0.75rem',
-                  opacity: 0.6,
-                }}
-              >
-                <strong style={{ color: '#fff' }}>{item.name}</strong>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#aaa' }}>{item.description}</p>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#666' }}>
-                  {item.points_cost} points needed · you have {rewards.points_balance}
-                </p>
-              </div>
-            ))}
-          </div>
+          <section className="fd-reward-section">
+            <p className="fd-success-label" style={{ color: 'var(--fd-muted)' }}>🔒 Keep Earning</p>
+            <ul className="fd-reward-list">
+              {rewards.locked.map((item) => (
+                <li key={item.id} className="fd-reward-card is-locked">
+                  <div className="fd-reward-row">
+                    <span className="fd-reward-icon" aria-hidden="true">{rewardEmoji(item)}</span>
+                    <div className="fd-reward-body">
+                      <p className="fd-reward-name">{item.name}</p>
+                      {item.description ? <p className="fd-reward-desc">{item.description}</p> : null}
+                      <p className="fd-reward-cost">
+                        {item.points_cost} pts · you have {rewards.points_balance}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {rewards.available.length === 0 && rewards.locked.length === 0 && (
@@ -199,13 +191,13 @@ export default function RewardsLookup() {
         )}
 
         <button
+          type="button"
           onClick={() => {
             setRewards(null);
             setRedeemStatus({});
             setRedeemMessage({});
           }}
-          className="fd-checkin-button"
-          style={{ background: 'transparent', border: '1px solid #444', color: '#aaa' }}
+          className="fd-secondary-button"
         >
           Look Up Another Number
         </button>
@@ -213,21 +205,29 @@ export default function RewardsLookup() {
     );
   }
 
+  // ----- Loading (first paint, before we know session state) -----
+  if (loading) {
+    return (
+      <div className="fd-empty-state">
+        <span className="fd-empty-icon" aria-hidden="true">🐾</span>
+        <p>Loading your rewards…</p>
+      </div>
+    );
+  }
+
+  // ----- No active session: clean empty state -----
   return (
-    <div className="fd-checkin-form">
-      <section className="fd-checkin-event-block">
-        <p className="fd-checkin-event-label">Check Your Rewards</p>
-        <h2>See Your Points &amp; Redeem</h2>
-        <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0.5rem 0 0' }}>Rewards are available only for an active check-in session.</p>
-      </section>
+    <div className="fd-empty-state">
+      <span className="fd-empty-icon" aria-hidden="true">🎁</span>
+      <h2>Check in to see your rewards</h2>
+      <p>Your points, visits, and rewards show up here once you&apos;ve checked in at tonight&apos;s event.</p>
 
-      {error && <p className="fd-checkin-error">{error}</p>}
-
-      <button onClick={handleLookup} disabled={loading} className="fd-checkin-button">
-        {loading ? 'Loading...' : 'Refresh My Rewards'}
-      </button>
-
-      <p className="fd-trust-copy">Check in first, then return here to redeem.</p>
+      <div className="fd-empty-actions">
+        <a href="/checkin" className="fd-primary-button">Go to Check-In</a>
+        <button type="button" onClick={handleLookup} disabled={loading} className="fd-secondary-button">
+          {loading ? 'Checking…' : 'Already Checked In — Refresh'}
+        </button>
+      </div>
     </div>
   );
 }

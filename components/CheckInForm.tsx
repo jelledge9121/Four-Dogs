@@ -20,6 +20,7 @@ type EventsResponse = {
 };
 
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
+type RedeemStatus = 'idle' | 'loading' | 'success' | 'error';
 
 type CheckinSuccess = {
   points_earned: number;
@@ -65,6 +66,16 @@ function formatEventSchedule(event: EventRow): string {
   return 'Schedule will be announced at the venue.';
 }
 
+function rewardEmoji(text: string): string {
+  const t = text.toLowerCase();
+  if (/trivia|quiz|question/.test(t)) return '🎯';
+  if (/bingo|card/.test(t)) return '🎱';
+  if (/beer|drink|cocktail|soda|draft|pint/.test(t)) return '🍺';
+  if (/app|nacho|wing|fries|food|plate|snack|chip/.test(t)) return '🍤';
+  if (/shirt|tee|gear|merch|hat|hoodie|swag|sticker/.test(t)) return '👕';
+  return '🏆';
+}
+
 export default function CheckInForm() {
   const [currentStep, setCurrentStep] = useState<'event' | 'details'>('event');
   const [teamName, setTeamName] = useState('');
@@ -81,7 +92,8 @@ export default function CheckInForm() {
   const [successPayload, setSuccessPayload] = useState<CheckinSuccess | null>(null);
   const [copied, setCopied] = useState(false);
   const [shareAwarded, setShareAwarded] = useState<string>('');
-  const [reminderOptIn, setReminderOptIn] = useState(false);
+  const [redeemStatus, setRedeemStatus] = useState<Record<string, RedeemStatus>>({});
+  const [redeemMessage, setRedeemMessage] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -213,6 +225,36 @@ export default function CheckInForm() {
     setShareAwarded(payload.awarded ? 'Bonus points added!' : payload.message || 'Already claimed.');
   }
 
+  async function handleRedeem(reward: RewardDefinition) {
+    setRedeemStatus((prev) => ({ ...prev, [reward.id]: 'loading' }));
+    setRedeemMessage((prev) => ({ ...prev, [reward.id]: '' }));
+
+    try {
+      const response = await fetch('/api/rewards/redeem', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ reward_catalog_id: reward.id }),
+      });
+
+      const payload = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!response.ok || !payload.ok) {
+        setRedeemStatus((prev) => ({ ...prev, [reward.id]: 'error' }));
+        setRedeemMessage((prev) => ({ ...prev, [reward.id]: payload.error || 'Redemption failed.' }));
+        return;
+      }
+
+      setRedeemStatus((prev) => ({ ...prev, [reward.id]: 'success' }));
+      setRedeemMessage((prev) => ({
+        ...prev,
+        [reward.id]: 'Request submitted! Show this to your host to redeem.',
+      }));
+    } catch {
+      setRedeemStatus((prev) => ({ ...prev, [reward.id]: 'error' }));
+      setRedeemMessage((prev) => ({ ...prev, [reward.id]: 'Something went wrong.' }));
+    }
+  }
+
   if (status === 'success' && successPayload) {
     return (
       <div className="fd-checkin-success">
@@ -265,14 +307,42 @@ export default function CheckInForm() {
         </p>
 
         {successPayload.available_rewards.length > 0 ? (
-          <div>
-            <p className="fd-success-label">Available Rewards</p>
-            <ul className="fd-success-list">
-              {successPayload.available_rewards.map((reward) => (
-                <li key={reward.id}>{reward.title}</li>
-              ))}
+          <section className="fd-reward-section">
+            <p className="fd-success-label">🎉 Available to Redeem</p>
+            <ul className="fd-reward-list">
+              {successPayload.available_rewards.map((reward) => {
+                const state = redeemStatus[reward.id];
+                const message = redeemMessage[reward.id];
+                return (
+                  <li key={reward.id} className="fd-reward-card is-available">
+                    <div className="fd-reward-row">
+                      <span className="fd-reward-icon" aria-hidden="true">
+                        {rewardEmoji(reward.title || reward.description)}
+                      </span>
+                      <div className="fd-reward-body">
+                        <p className="fd-reward-name">{reward.title}</p>
+                        {reward.description ? <p className="fd-reward-desc">{reward.description}</p> : null}
+                        <p className="fd-reward-cost">{reward.cost} pts</p>
+                      </div>
+                      <div className="fd-reward-redeem">
+                        <button
+                          type="button"
+                          onClick={() => handleRedeem(reward)}
+                          disabled={state === 'loading' || state === 'success'}
+                          className={`fd-redeem-button ${state === 'success' ? 'is-done' : ''}`}
+                        >
+                          {state === 'loading' ? '…' : state === 'success' ? '✓ Done' : 'Redeem'}
+                        </button>
+                      </div>
+                    </div>
+                    {message ? (
+                      <p className={`fd-reward-msg ${state === 'success' ? 'is-success' : 'is-error'}`}>{message}</p>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
-          </div>
+          </section>
         ) : (
           <p className="fd-checkin-info">Keep checking in to unlock rewards!</p>
         )}
@@ -330,13 +400,6 @@ export default function CheckInForm() {
           </div>
           {typeof navigator !== 'undefined' && navigator.share ? <button type="button" className="fd-checkin-button" onClick={() => navigator.share({ title: selectedEvent?.title || 'Four Dogs Event', url: window.location.href })}>Native Share</button> : null}
           {shareAwarded ? <p className="fd-checkin-info">{shareAwarded}</p> : null}
-          <p className="fd-checkin-info">Bring-a-Friend +5 bonus will be awarded when referred first-time guest check-in validation is enabled.</p>
-        </div>
-
-        <div className="fd-rewards-copy">
-          <p style={{ color: '#9eeed9', fontWeight: 700 }}>Reminders</p>
-          <label><input type="checkbox" checked={reminderOptIn} onChange={(e) => setReminderOptIn(e.target.checked)} /> Want a reminder before the next Four Dogs event?</label>
-          <p className="fd-checkin-info">Reminder preference UI captured locally for now. Persistence pending schema support.</p>
         </div>
 
         <button
@@ -351,9 +414,10 @@ export default function CheckInForm() {
             setErrorMessage('');
             setSuccessPayload(null);
             setCopied(false);
+            setRedeemStatus({});
+            setRedeemMessage({});
           }}
-          className="fd-checkin-button"
-          style={{ marginTop: '1rem', background: 'transparent', border: '1px solid #444', color: '#aaa' }}
+          className="fd-secondary-button"
         >
           Check In Another Player
         </button>
