@@ -79,22 +79,12 @@ function getSupabaseUrl(): string {
   return url.replace(/\/$/, '');
 }
 
-function getSupabaseKey(mode: 'read' | 'write'): string {
-  if (mode === 'write') {
-    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRole) {
-      throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY for server-side write/RPC operations.');
-    }
-    return serviceRole;
-  }
-
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
-  if (anon) return anon;
-
+function getSupabaseKey(_mode: 'read' | 'write'): string {
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (serviceRole) return serviceRole;
-
-  throw new Error('Missing Supabase read key. Set NEXT_PUBLIC_SUPABASE_ANON_KEY (preferred) or SUPABASE_SERVICE_ROLE_KEY.');
+  if (!serviceRole) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY for server-side Supabase access.');
+  }
+  return serviceRole;
 }
 
 function getSupabaseConfig(mode: 'read' | 'write'): { url: string; key: string } {
