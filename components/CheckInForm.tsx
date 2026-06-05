@@ -398,7 +398,7 @@ export default function CheckInForm() {
             <button type="button" className="fd-checkin-button" onClick={() => window.open('https://www.facebook.com/profile.php?id=61574086319373', '_blank')}>Follow on Facebook</button>
             <button type="button" className="fd-checkin-button" onClick={() => claimBonus('facebook_follow')}>Claim +1 Follow</button>
           </div>
-          {typeof navigator !== 'undefined' && navigator.share ? <button type="button" className="fd-checkin-button" onClick={() => navigator.share({ title: selectedEvent?.title || 'Four Dogs Event', url: window.location.href })}>Native Share</button> : null}
+          {typeof navigator !== 'undefined' && navigator.share ? <button type="button" className="fd-checkin-button" onClick={() => navigator.share({ title: selectedEvent?.title || 'Four Dogs Event', url: buildReferralLink(successPayload.referral_code!) })}>Native Share</button> : null}
           {shareAwarded ? <p className="fd-checkin-info">{shareAwarded}</p> : null}
         </div>
 
