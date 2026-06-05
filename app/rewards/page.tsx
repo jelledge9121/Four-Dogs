@@ -11,7 +11,7 @@ export default function RewardsPage() {
           </div>
           <h1 className="fd-logo-title">Four Dogs Entertainment</h1>
           <div className="fd-header-rule" aria-hidden="true" />
-          <p className="fd-checkin-tagline">For a Doggone Good Time</p>
+          <p className="fd-checkin-tagline">You bring your people. We bring the doggone good time.</p>
         </header>
 
         <section className="fd-checkin-card" aria-label="Rewards lookup">
